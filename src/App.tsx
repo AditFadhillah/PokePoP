@@ -10,11 +10,12 @@ function App() {
       <div className="game-section">
         <h2>Pokemon Clone</h2>
         <iframe 
-          src="/game/PokemonTemplate/exports/web/Pokemon_Clone.html"
+          src="https://godot-web-export-poke.vercel.app/Pokemon_Clone.html"
           width="800"
           height="600"
           title="Pokemon Clone Game"
           className="game-frame"
+          allow="fullscreen"
         />
       </div>
       

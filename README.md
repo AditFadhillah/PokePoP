@@ -156,3 +156,12 @@ git log --graph --oneline --all
 
 # Show last commit details
 git show HEAD
+
+
+# ''''''''''''''''''''''''''''''''''''''''
+git add .
+git commit -m "Add Pokemon game layout"
+git push origin main
+
+npm run build
+npm run deploy
