@@ -124,6 +124,7 @@ git push -u origin feature-battle-system
 
 # Merge feature branch into main
 git checkout main
+git pull origin main
 git merge feature-battle-system
 
 # Delete branch locally
