@@ -1,34 +1,43 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-container">
+      {/* Game Section - Left Side */}
+      <div className="game-section">
+        <h2>Pokemon Clone</h2>
+        <iframe 
+          src="/game/PokemonTemplate/exports/web/Pokemon_Clone.html"
+          width="800"
+          height="600"
+          title="Pokemon Clone Game"
+          className="game-frame"
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      
+      {/* Info Section - Right Side */}
+      <div className="info-section">
+        <h1>PokePoP</h1>
+        <div className="card">
+          <button onClick={() => setCount((count) => count + 1)}>
+            count is {count}
+          </button>
+          <p>Play the Pokemon Clone game on the left!</p>
+          <p>Click count: <strong>{count}</strong></p>
+        </div>
+        <div className="info-content">
+          <h3>Game Features:</h3>
+          <ul>
+            <li>Classic Pokemon-style gameplay</li>
+            <li>Built with Godot Engine</li>
+            <li>Web-based HTML5 export</li>
+          </ul>
+        </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
