@@ -11,8 +11,8 @@ function App() {
         <h2>Pokemon Clone</h2>
         <iframe 
           src="https://godot-web-export-poke.vercel.app/Pokemon_Clone.html"
-          width="800"
-          height="600"
+          width="600"
+          height="400"
           title="Pokemon Clone Game"
           className="game-frame"
           allow="fullscreen"

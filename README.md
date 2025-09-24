@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Add Pokemon game layout"
+git commit -m "frame Vercel connection"
 git push origin main
 
 npm run build
