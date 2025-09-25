@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "attempt 1: sending battle signal"
+git commit -m "attempt 2: sending battle signal"
 git push origin main
 
 npm run build
