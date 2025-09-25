@@ -25,6 +25,19 @@ var begin_battle = false
 
 var thunder_scene = preload("res://Scenes/Battle/ThunderShock.tscn")
 
+func send_battle_result(result: String):
+	# Send message to parent window (React app) about battle result
+	if OS.has_feature("web"):
+		var js_code = """
+		if (window.parent && window.parent !== window) {
+			window.parent.postMessage({
+				type: 'pokemon_battle_ended',
+				result: '%s'
+			}, '*');
+		}
+		""" % result
+		JavaScriptBridge.eval(js_code)
+
 func _ready():
 	SignalManager.connect("btn_pos", move_menu_arrow)
 	SignalManager.connect("player_animation_finished", on_player_animation_finished)
@@ -59,10 +72,14 @@ func on_enemy_dead():
 	# exit battle
 	show_dialog("Enemy RATTATA fainted")
 	anim.play("fade_out")
+	# Send message to React app that battle ended with victory
+	send_battle_result("victory")
 
 func on_player_dead():
 	show_dialog("Player blacked out!")
 	anim.play("fade_out")
+	# Send message to React app that battle ended with defeat
+	send_battle_result("defeat")
 
 	
 func move_menu_arrow(x,y):
@@ -133,6 +150,8 @@ func _on_run_btn_pressed():
 	# exit battle
 	show_dialog("Run away safely")
 	anim.play("fade_out")
+	# Send message to React app that battle ended by running away
+	send_battle_result("escaped")
 
 func _on_animation_player_animation_finished(anim_name):
 	if anim_name == "fade_out":

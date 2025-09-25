@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "frame Vercel connection"
+git commit -m "attempt 1: sending battle signal"
 git push origin main
 
 npm run build
