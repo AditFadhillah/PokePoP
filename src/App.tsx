@@ -2,9 +2,23 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
   const [battleCount, setBattleCount] = useState(0)
   const [lastBattleResult, setLastBattleResult] = useState<string>('')
+  
+  // Python Editor States
+  const [pyodide, setPyodide] = useState<any>(null)
+  const [code, setCode] = useState(`print("Hello from Python!")`)
+  const [output, setOutput] = useState('')
+
+  // Load Pyodide once
+  useEffect(() => {
+    const load = async () => {
+      const pyodideInstance = await (window as any).loadPyodide()
+      setPyodide(pyodideInstance)
+      setOutput('✅ Pyodide loaded')
+    }
+    load()
+  }, [])
 
   useEffect(() => {
     // Listen for messages from the Pokemon game iframe
@@ -25,6 +39,25 @@ function App() {
     }
   }, [])
 
+  async function runPythonCode() {
+    if (!pyodide) return
+
+    try {
+      await pyodide.runPythonAsync(`
+          import sys
+          from io import StringIO
+          sys.stdout = sys.stderr = mystdout = StringIO()
+              `)
+
+      await pyodide.runPythonAsync(code)
+
+      const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
+      setOutput(outputText || '✅ No output')
+    } catch (err: any) {
+      setOutput('❌ Error: ' + err.message)
+    }
+  }
+
   return (
     <div className="app-container">
       {/* Game Section - Left Side */}
@@ -40,54 +73,28 @@ function App() {
         />
       </div>
       
-      {/* Info Section - Right Side */}
-      <div className="info-section">
-        <h1>PokePoP</h1>
-        <div className="card">
-          <button onClick={() => setCount((count) => count + 1)}>
-            count is {count}
-          </button>
-          <p>Play the Pokemon Clone game on the left!</p>
-          <p>Click count: <strong>{count}</strong></p>
-        </div>
+      {/* Right Side - Python Editor */}
+      <div className="right-panel">
         
-        {/* Battle Counter Section */}
-        <div className="battle-stats">
-          <h3>Battle Statistics</h3>
-          <div className="stat-item">
-            <span className="stat-label">Battles Completed:</span>
-            <span className="stat-value">{battleCount}</span>
-          </div>
-          {lastBattleResult && (
-            <div className="stat-item">
-              <span className="stat-label">Last Battle:</span>
-              <span className={`stat-value result-${lastBattleResult}`}>
-                {lastBattleResult === 'victory' ? '🏆 Victory!' : 
-                 lastBattleResult === 'defeat' ? '💀 Defeat' : 
-                 lastBattleResult === 'escaped' ? '🏃 Escaped' : lastBattleResult}
-              </span>
-            </div>
-          )}
-        </div>
-        
-        <div className="info-content">
-          <h3>Game Features:</h3>
-          <ul>
-            <li>Classic Pokemon-style gameplay</li>
-            <li>Built with Godot Engine</li>
-            <li>Web-based HTML5 export</li>
-            <li>Real-time battle tracking</li>
-          </ul>
+        {/* Python Editor Section - Compact */}
+        <div className="python-section-compact">
+          <h3>Python Editor</h3>
           
-          <div className="instructions">
-            <h4>How to trigger battle counter:</h4>
-            <ol>
-              <li>Walk around in the game</li>
-              <li>Enter a wild Pokemon battle</li>
-              <li>Win, lose, or run from the battle</li>
-              <li>Watch the counter update above! 🎮</li>
-            </ol>
-          </div>
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            rows={6}
+            placeholder="Write your Python code here..."
+            className="python-textarea-compact"
+          />
+
+          <button onClick={runPythonCode} className="run-button-compact">
+            ▶️ Run
+          </button>
+
+          <pre className="python-output-compact">
+            {output}
+          </pre>
         </div>
       </div>
     </div>

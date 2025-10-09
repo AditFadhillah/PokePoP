@@ -48,6 +48,10 @@ func _ready():
 	dialog_box.visible = true
 	dialog.visible = false
 	$BattleMusic.play()
+	
+	# Set battle participants for database logging
+	if GameManager:
+		GameManager.set_battle_participants("RATTATA", "PIKACHU")
 
 func _process(_delta):
 	click_to_continue.visible = is_dialog_finished
@@ -152,6 +156,9 @@ func _on_run_btn_pressed():
 	anim.play("fade_out")
 	# Send message to React app that battle ended by running away
 	send_battle_result("escaped")
+	# Log flee to database
+	if GameManager:
+		GameManager._end_battle("flee")
 
 func _on_animation_player_animation_finished(anim_name):
 	if anim_name == "fade_out":

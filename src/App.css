@@ -10,6 +10,101 @@
   gap: 2rem;
   min-height: 100vh;
   align-items: flex-start;
+  padding: 1rem;
+}
+
+.game-section {
+  flex: 1;
+  max-width: 650px;
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.right-panel {
+  flex: 0 0 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.battle-stats {
+  background-color: #f0f8ff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #4a90e2;
+}
+
+.battle-stats h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c5282;
+  font-size: 1.2em;
+}
+
+.python-section-compact {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.python-section-compact h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.python-textarea-compact {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: vertical;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.python-textarea-compact:focus {
+  outline: none;
+  border-color: #4299e1;
+  background-color: #ffffff;
+}
+
+.run-button-compact {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.run-button-compact:hover {
+  background-color: #3182ce;
+}
+
+.python-output-compact {
+  background-color: #1a202c;
+  color: #00ff00;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  min-height: 40px;
+  max-height: 150px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 .game-section {

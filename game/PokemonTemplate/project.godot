@@ -15,7 +15,7 @@ config/description="Pokemon Clone made in Godot 4.2.1
 
 RNB Games 2024
 "
-run/main_scene="res://Scenes/Menu/main_menu.tscn"
+run/main_scene="res://Scenes/Menu/login_screen.tscn"
 config/features=PackedStringArray("4.5", "Mobile")
 config/icon="res://Assets/Sprites/Icon/Poké_Ball_icon.svg.png"
 
@@ -23,6 +23,7 @@ config/icon="res://Assets/Sprites/Icon/Poké_Ball_icon.svg.png"
 
 SignalManager="*res://Scenes/Global/signal_manager.gd"
 GameManager="*res://Scenes/Global/game_manager.gd"
+SupabaseManager="*res://Scenes/Global/supabase_manager.gd"
 
 [display]
 
