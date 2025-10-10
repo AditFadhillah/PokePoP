@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  const [battleCount, setBattleCount] = useState(0)
-  const [lastBattleResult, setLastBattleResult] = useState<string>('')
-  
   // Python Editor States
   const [pyodide, setPyodide] = useState<any>(null)
   const [code, setCode] = useState(`print("Hello from Python!")`)
@@ -18,25 +15,6 @@ function App() {
       setOutput('✅ Pyodide loaded')
     }
     load()
-  }, [])
-
-  useEffect(() => {
-    // Listen for messages from the Pokemon game iframe
-    const handleMessage = (event: MessageEvent) => {
-      // Make sure the message is from our game
-      if (event.data && event.data.type === 'pokemon_battle_ended') {
-        setBattleCount(prev => prev + 1)
-        setLastBattleResult(event.data.result)
-        console.log('Battle ended with result:', event.data.result)
-      }
-    }
-
-    window.addEventListener('message', handleMessage)
-    
-    // Cleanup listener on component unmount
-    return () => {
-      window.removeEventListener('message', handleMessage)
-    }
   }, [])
 
   async function runPythonCode() {
