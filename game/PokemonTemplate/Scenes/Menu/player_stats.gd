@@ -13,24 +13,18 @@ extends Control
 func _ready():
 	back_button.pressed.connect(_on_back_pressed)
 	
-	# Load and display player stats
+	# Load and display local player stats
 	load_player_stats()
-	
-	# Connect to Supabase signals
-	if SupabaseManager:
-		SupabaseManager.player_data_loaded.connect(_on_player_data_loaded)
 
 func load_player_stats():
-	if not GameManager or not GameManager.current_player.has("id"):
-		username_label.text = "No player data"
-		return
-	
-	var player = GameManager.current_player
-	display_player_stats(player)
-	
-	# Load recent battles
-	if SupabaseManager:
-		SupabaseManager.get_battle_history(player.id, 5)
+	# Display default/local stats
+	var default_player = {
+		"username": "Player",
+		"total_battles": 0,
+		"wins": 0,
+		"losses": 0
+	}
+	display_player_stats(default_player)
 
 func display_player_stats(player_data):
 	username_label.text = "Player: " + player_data.get("username", "Unknown")
@@ -45,39 +39,15 @@ func display_player_stats(player_data):
 		win_rate = (float(wins) / float(total)) * 100.0
 	win_rate_label.text = "Win Rate: " + "%.1f" % win_rate + "%"
 	
-	var last_played = player_data.get("last_played", "")
-	if last_played:
-		last_played_label.text = "Last Played: " + last_played.split("T")[0]
-	else:
-		last_played_label.text = "Last Played: Never"
-
-func _on_player_data_loaded(player_data):
-	if player_data:
-		display_player_stats(player_data)
-		# Update GameManager with fresh data
-		if GameManager:
-			GameManager.current_player = player_data
-
-func _on_battles_loaded(battles_data):
-	# Clear existing battle entries
+	last_played_label.text = "Last Played: Today"
+	
+	# Clear existing battle entries and show placeholder
 	for child in recent_battles_list.get_children():
 		child.queue_free()
 	
-	if not battles_data or battles_data.size() == 0:
-		var no_battles = Label.new()
-		no_battles.text = "No recent battles"
-		recent_battles_list.add_child(no_battles)
-		return
-	
-	# Add recent battle entries
-	for battle in battles_data:
-		var battle_entry = Label.new()
-		var result_text = battle.battle_result.capitalize()
-		var opponent = battle.opponent_pokemon
-		var date = battle.created_at.split("T")[0]
-		
-		battle_entry.text = "%s vs %s - %s (%s)" % [battle.player_pokemon, opponent, result_text, date]
-		recent_battles_list.add_child(battle_entry)
+	var no_battles = Label.new()
+	no_battles.text = "No recent battles (local play only)"
+	recent_battles_list.add_child(no_battles)
 
 func _on_back_pressed():
 	get_tree().change_scene_to_file("res://Scenes/Menu/main_menu.tscn")

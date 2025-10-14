@@ -49,7 +49,7 @@ func _ready():
 	dialog.visible = false
 	$BattleMusic.play()
 	
-	# Set battle participants for database logging
+	# Set battle participants for local tracking
 	if GameManager:
 		GameManager.set_battle_participants("RATTATA", "PIKACHU")
 
@@ -156,7 +156,7 @@ func _on_run_btn_pressed():
 	anim.play("fade_out")
 	# Send message to React app that battle ended by running away
 	send_battle_result("escaped")
-	# Log flee to database
+	# Update local battle stats
 	if GameManager:
 		GameManager._end_battle("flee")
 

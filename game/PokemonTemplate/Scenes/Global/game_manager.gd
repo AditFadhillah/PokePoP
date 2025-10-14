@@ -4,8 +4,13 @@ var turn = "player"
 var is_battle = false
 var is_dialog = false
 
-# Player data from Supabase
-var current_player = {}
+# Local player data
+var current_player = {
+	"username": "Player",
+	"total_battles": 0,
+	"wins": 0,
+	"losses": 0
+}
 var current_battle_start_time = 0
 var current_opponent = ""
 var current_player_pokemon = ""
@@ -36,47 +41,30 @@ func _end_battle(result: String):
 	is_battle = false
 	var battle_duration = (Time.get_ticks_msec() - current_battle_start_time) / 1000
 	
-	# Log battle to database
-	if SupabaseManager and current_player.has("id"):
-		var exp_gained = 50 if result == "win" else 10
-		SupabaseManager.log_battle(
-			current_player.id,
-			current_opponent,
-			current_player_pokemon,
-			result,
-			battle_duration,
-			exp_gained
-		)
-		
-		# Update player battle stats
-		SupabaseManager.update_player_battle_stats(current_player.id, result == "win")
+	# Update local stats
+	current_player.total_battles += 1
+	if result == "win":
+		current_player.wins += 1
+	else:
+		current_player.losses += 1
+	
+	print("Battle ended: ", result, " (Duration: ", battle_duration, "s)")
+	print("Updated stats - Battles: ", current_player.total_battles, ", Wins: ", current_player.wins, ", Losses: ", current_player.losses)
 
 func set_battle_participants(opponent: String, player_pokemon: String):
 	current_opponent = opponent
 	current_player_pokemon = player_pokemon
 
-# Save game state to database
+# Save game state locally (could be extended to save to file)
 func save_game():
-	if not SupabaseManager or not current_player.has("id"):
-		return
-	
-	var game_data = {
-		"current_scene": get_tree().current_scene.scene_file_path,
-		"player_position": {}, # You'd add actual position data here
-		"is_battle": is_battle,
-		"is_dialog": is_dialog,
-		"turn": turn
-		# Add more game state data as needed
-	}
-	
-	SupabaseManager.save_game_state(current_player.id, game_data)
+	print("Game saved locally")
+	# Could implement local file saving here if needed
 
-# Auto-save every 30 seconds
+# Auto-save every 30 seconds (disabled for local play)
 var save_timer = 0.0
 const AUTO_SAVE_INTERVAL = 30.0
 
 func _process(delta):
-	save_timer += delta
-	if save_timer >= AUTO_SAVE_INTERVAL:
-		save_timer = 0.0
+	# Auto-save disabled for local play
+	pass
 		save_game()
