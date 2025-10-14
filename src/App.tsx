@@ -4,7 +4,10 @@ import './App.css'
 function App() {
   // Python Editor States
   const [pyodide, setPyodide] = useState<any>(null)
-  const [code, setCode] = useState(`print("Hello from Python!")`)
+  const [code, setCode] = useState(`# Test the game communication
+print("Hello from Python!")
+print("Click Enter")
+print("This should trigger the game!")`)
   const [output, setOutput] = useState('')
 
   // Load Pyodide once
@@ -31,8 +34,27 @@ function App() {
 
       const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
       setOutput(outputText || '✅ No output')
+      
+      // Check if output contains "Click Enter" and send signal to game
+      if (outputText && outputText.toLowerCase().includes('click enter')) {
+        sendEnterToGame()
+      }
     } catch (err: any) {
       setOutput('❌ Error: ' + err.message)
+    }
+  }
+
+  function sendEnterToGame() {
+    // Get the iframe element
+    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    if (gameFrame && gameFrame.contentWindow) {
+      // Send a message to the Godot game
+      gameFrame.contentWindow.postMessage({
+        type: 'PRESS_ENTER',
+        action: 'key_press',
+        key: 'enter'
+      }, '*')
+      console.log('🎮 Sent ENTER signal to game!')
     }
   }
 
@@ -42,7 +64,7 @@ function App() {
       <div className="game-section">
         <h2>Pokemon Clone</h2>
         <iframe 
-          src="https://godot-web-export-poke.vercel.app/Pokemon_Clone.html"
+          src="/PokePoP/Pokemon_Clone.html"
           width="600"
           height="400"
           title="Pokemon Clone Game"
@@ -70,6 +92,10 @@ function App() {
             ▶️ Run
           </button>
 
+          <button onClick={sendEnterToGame} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
+            🎮 Send Enter to Game
+          </button>
+
           <pre className="python-output-compact">
             {output}
           </pre>
@@ -79,5 +105,4 @@ function App() {
   )
 }
 
-export default App
-"// deploy" 
+export default App 
