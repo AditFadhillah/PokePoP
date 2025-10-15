@@ -137,10 +137,16 @@ func _on_run_btn_pressed():
 func _on_animation_player_animation_finished(anim_name):
 	if anim_name == "fade_out":
 		GameManager.is_battle = false
+		# Send signal to React that battle has ended
+		if JSBridge:
+			JSBridge.send_message_to_react("BATTLE_ENDED", {"message": "battle ended"})
 		queue_free()
 		
 	if anim_name == "fade_in":
 		begin_battle = true
+		# Send signal to React that battle has started
+		if JSBridge:
+			JSBridge.send_message_to_react("BATTLE_STARTED", {"message": "in battle"})
 
 func on_enemy_turn():
 	if enemy.hp > 0:

@@ -22,7 +22,15 @@ func setup_js_bridge():
 	
 	// Create bridge object for Godot to access
 	window.godot_js_bridge = {
-		pendingEnter: false
+		pendingEnter: false,
+		sendMessageToReact: function(message) {
+			// Send message to parent window (React app)
+			window.parent.postMessage({
+				type: 'GODOT_MESSAGE',
+				data: message
+			}, '*');
+			console.log('📤 Sent message to React:', message);
+		}
 	};
 	
 	console.log('✅ JavaScript bridge initialized for Godot game!');
@@ -36,6 +44,24 @@ func setup_js_bridge():
 	timer.timeout.connect(_check_js_messages)
 	add_child(timer)
 	timer.start()
+
+# Function to send messages from Godot to React
+func send_message_to_react(message_type: String, data: Dictionary = {}):
+	if OS.get_name() == "Web":
+		var message = {
+			"type": message_type,
+			"data": data,
+			"timestamp": Time.get_ticks_msec()
+		}
+		
+		var js_send = """
+		if (window.godot_js_bridge && window.godot_js_bridge.sendMessageToReact) {
+			window.godot_js_bridge.sendMessageToReact(%s);
+		}
+		""" % JSON.stringify(message)
+		
+		JavaScriptBridge.eval(js_send)
+		print("📤 Sent message to React: ", message_type)
 
 func _check_js_messages():
 	# Check if JavaScript bridge has pending messages
