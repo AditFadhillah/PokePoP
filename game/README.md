@@ -92,7 +92,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Godot + Python Editor"
+git commit -m "Bidirectional signal"
 git push origin main
 
 npm run build
