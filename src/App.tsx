@@ -9,6 +9,7 @@ print("Hello from Python!")
 print("Click Enter")
 print("This should trigger the game!")`)
   const [output, setOutput] = useState('')
+  const [gameStatus, setGameStatus] = useState('menu') // 'menu', 'battle', 'unknown'
 
   // Load Pyodide once
   useEffect(() => {
@@ -18,7 +19,39 @@ print("This should trigger the game!")`)
       setOutput('✅ Pyodide loaded')
     }
     load()
+
+    // Listen for messages from Godot
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'GODOT_MESSAGE') {
+        console.log('📨 Received message from Godot:', event.data)
+        handleGodotMessage(event.data.data)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('message', handleMessage)
+    }
   }, [])
+
+  function handleGodotMessage(data: any) {
+    if (data.type === 'BATTLE_STARTED') {
+      console.log('⚔️ Battle started! Updating Python code...')
+      setGameStatus('battle')
+      setCode('print("in battle")')
+      setOutput('⚔️ Battle started! Code updated automatically.')
+    } else if (data.type === 'BATTLE_ENDED') {
+      console.log('🏁 Battle ended! Restoring Python code...')
+      setGameStatus('menu')
+      setCode(`# Test the game communication
+print("Hello from Python!")
+print("Click Enter")
+print("This should trigger the game!")`)
+      setOutput('🏁 Battle ended! Code restored.')
+    }
+  }
 
   async function runPythonCode() {
     if (!pyodide) return
@@ -79,6 +112,20 @@ print("This should trigger the game!")`)
         {/* Python Editor Section - Compact */}
         <div className="python-section-compact">
           <h3>Python Editor</h3>
+          
+          {/* Game Status Indicator */}
+          <div style={{
+            padding: '5px 10px',
+            marginBottom: '10px',
+            borderRadius: '5px',
+            backgroundColor: gameStatus === 'battle' ? '#ff4444' : '#44ff44',
+            color: 'white',
+            textAlign: 'center',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>
+            {gameStatus === 'battle' ? '⚔️ IN BATTLE' : '🏠 MENU/OVERWORLD'}
+          </div>
           
           <textarea
             value={code}
