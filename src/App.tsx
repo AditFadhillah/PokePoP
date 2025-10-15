@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { supabase } from './lib/supabase'  // added supabase lib 
+import { usePyodide } from './lib/usepyodide' // added for include the editor 
+
+// import store files modul 
+import { runAndSavePython } from './lib/storeoutput'
+import { runPython } from './lib/storeoutput'
 
 function App() {
   // Python Editor States
@@ -10,39 +16,50 @@ print("Click Enter")
 print("This should trigger the game!")`)
   const [output, setOutput] = useState('')
 
-  // Load Pyodide once
+
+  //iniitial state of pyodide 
+  const pyodideInstance = usePyodide()
   useEffect(() => {
-    const load = async () => {
-      const pyodideInstance = await (window as any).loadPyodide()
+    if (pyodideInstance) {
       setPyodide(pyodideInstance)
       setOutput('✅ Pyodide loaded')
     }
-    load()
+  }, [pyodideInstance])
+
+
+  // Retesting connection to DB 
+  const [count, setCount] = useState(0)
+  const [ok, setOk] = useState('checking…') // Added new state for checking database connection 
+
+  // testing store count method 
+  async function updateCountInDB(newCount: number) {
+    const { data: { user }, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !user) { console.error(userErr || 'No user'); return }
+
+    const { error } = await supabase
+      .from('testcount') // or 'test_count' — match your actual table name
+      .upsert([{ id: user.id, totalcount: newCount }])
+
+    if (error) console.error('DB upsert error:', error)
+  }
+
+  // method for testing data connection 
+  useEffect(() => {
+    (async () => {
+      // Optional: create an anonymous session if none exists
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        const { error } = await supabase.auth.signInAnonymously()
+        if (error) return setOk('error: ' + error.message)
+      }
+
+      // Now report the current session state
+      const { data: { session: s }, error } = await supabase.auth.getSession()
+      if (error) setOk('error: ' + error.message)
+      else setOk(s ? 'session exists' : 'no session yet')
+    })()
   }, [])
 
-  async function runPythonCode() {
-    if (!pyodide) return
-
-    try {
-      await pyodide.runPythonAsync(`
-          import sys
-          from io import StringIO
-          sys.stdout = sys.stderr = mystdout = StringIO()
-              `)
-
-      await pyodide.runPythonAsync(code)
-
-      const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
-      setOutput(outputText || '✅ No output')
-      
-      // Check if output contains "Click Enter" and send signal to game
-      if (outputText && outputText.toLowerCase().includes('click enter')) {
-        sendEnterToGame()
-      }
-    } catch (err: any) {
-      setOutput('❌ Error: ' + err.message)
-    }
-  }
 
   function sendEnterToGame() {
     // Get the iframe element
@@ -72,6 +89,7 @@ print("This should trigger the game!")`)
           allow="fullscreen"
         />
       </div>
+
       
       {/* Right Side - Python Editor */}
       <div className="right-panel">
@@ -83,12 +101,47 @@ print("This should trigger the game!")`)
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+                // Ensure that tab is working in the editor 
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const target = e.target as HTMLTextAreaElement
+                const start = target.selectionStart
+                const end = target.selectionEnd
+                const newValue = code.substring(0, start) + '    ' + code.substring(end)
+                setCode(newValue)
+                // Set cursor after inserted tab
+                setTimeout(() => {
+                  target.selectionStart = target.selectionEnd = start + 4
+                }, 0)
+              }
+            }}
             rows={6}
             placeholder="Write your Python code here..."
             className="python-textarea-compact"
           />
 
-          <button onClick={runPythonCode} className="run-button-compact">
+
+          <button
+            /* onClick={async () => {
+              if (!pyodide) return;
+              try {
+                const outputText = await runAndSavePython(pyodide, code, 'output.txt')
+                setOutput(outputText || '✅ No output');
+              } catch (err: any) {
+                const errorMsg = '❌ Error: ' + err.message;
+                setOutput(errorMsg);
+              }
+            }}
+            className="run-button-compact"
+            */
+
+            onClick={async () => {
+              if (!pyodide) return
+              const outputText = await runPython(pyodide,code)
+              setOutput(outputText)
+            }}
+          >
             ▶️ Run
           </button>
 
@@ -99,6 +152,16 @@ print("This should trigger the game!")`)
           <pre className="python-output-compact">
             {output}
           </pre>
+          <div>Supabase status: {ok}</div>  {/* Added for checking status */}
+           <div className="card">
+            <button onClick={async () => {
+              const newCount = count + 1
+              setCount(newCount) /* Added for stored count in database */
+              await updateCountInDB(newCount)
+            }}>
+              test count is {count}
+            </button>
+          </div>
         </div>
       </div>
     </div>
