@@ -13,7 +13,7 @@ func setup_js_bridge():
 	var js_code = """
 	window.addEventListener('message', function(event) {
 		if (event.data && event.data.type === 'PRESS_ENTER') {
-			console.log('🎮 Received PRESS_ENTER message from React!');
+			console.log('Received PRESS_ENTER message from React');
 			if (window.godot_js_bridge) {
 				window.godot_js_bridge.pendingEnter = true;
 			}
@@ -29,16 +29,16 @@ func setup_js_bridge():
 				type: 'GODOT_MESSAGE',
 				data: message
 			}, '*');
-			console.log('📤 Sent message to React:', message);
+			console.log('Sent message to React:', message);
 		}
 	};
 	
-	console.log('✅ JavaScript bridge initialized for Godot game!');
+	console.log('Javascript bridge initialized for Godot game');
 	"""
 	
 	JavaScriptBridge.eval(js_code)
 	
-	# Setup periodic check for JavaScript messages
+	# Setup periodic check for Javascript messages
 	var timer = Timer.new()
 	timer.wait_time = 0.1  # Check every 100ms
 	timer.timeout.connect(_check_js_messages)
@@ -61,7 +61,7 @@ func send_message_to_react(message_type: String, data: Dictionary = {}):
 		""" % JSON.stringify(message)
 		
 		JavaScriptBridge.eval(js_send)
-		print("📤 Sent message to React: ", message_type)
+		print("Sent message to React: ", message_type)
 
 func _check_js_messages():
 	# Check if JavaScript bridge has pending messages
@@ -76,7 +76,7 @@ func _check_js_messages():
 	
 	var result = JavaScriptBridge.eval(js_check)
 	if result:
-		print("🎮 Received ENTER signal from JavaScript!")
+		print("Received ENTER signal from Javascript")
 		enter_pressed_from_js.emit()
 		# Simulate actual Enter key press
 		simulate_enter_key()
@@ -95,4 +95,4 @@ func simulate_enter_key():
 	input_event.pressed = false
 	Input.parse_input_event(input_event)
 	
-	print("✅ Simulated ENTER key press in Godot!")
+	print("Simulated ENTER key press in Godot")

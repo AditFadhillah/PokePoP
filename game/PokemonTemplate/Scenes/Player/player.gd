@@ -10,23 +10,33 @@ var move_direction = Vector2.ZERO
 # tile data
 var is_on_tall_grass
 var current_tile: Vector2i
-@onready var tilemap = get_tree().get_nodes_in_group("tiles")[0]
+@onready var tiles_node = get_tree().current_scene.get_node("Tiles")
+@onready var tall_grass_layer: TileMapLayer
 
 # battle variables
 var rng = RandomNumberGenerator.new()
 var random_encounter
 var battle_scene = preload("res://Scenes/Battle/battle.tscn")
-var probability = 1
+var probability = 0.85  # 15% encounter rate (1.0 - 0.85 = 0.15)
 
 
 func _ready():
 	SignalManager.connect("instantiate_battle", battle)
 	randomize()
+	# Get the TallGrass layer specifically
+	if tiles_node:
+		tall_grass_layer = tiles_node.get_node("TallGrass")
+		if tall_grass_layer:
+			print("TallGrass layer found successfully!")
+		else:
+			print("Error: TallGrass layer not found under Tiles node")
+	else:
+		print("Error: Tiles node not found!")
 	
-func _process(delta):
+func _process(_delta):
 	get_input()
 	
-func _physics_process(delta):
+func _physics_process(_delta):
 	velocity = lerp(velocity, Vector2.ZERO, FRICTION)
 	
 	if !GameManager.is_battle:
@@ -75,25 +85,38 @@ func move():
 
 
 func get_tile_below_player():
-	# get tile data
-	var tile_below: Vector2i = tilemap.local_to_map(position) 
-	var tile_data: TileData = tilemap.get_cell_tile_data(0, tile_below)
+	# Check if tall_grass_layer exists before using it
+	if not tall_grass_layer:
+		print("TallGrass layer not available, skipping encounter check")
+		return
 	
-	# check if player is on the same tile
-	if current_tile != tile_below and tile_data:
+	# get tile position below player
+	var tile_below: Vector2i = tall_grass_layer.local_to_map(position)
+	
+	# check if player is on a new tile
+	if current_tile != tile_below:
 		current_tile = tile_below
-		print(current_tile)
+		print("Current tile: ", current_tile)
 		
-		# check if tile is tall grass
-		is_on_tall_grass = tile_data.get_custom_data("tall_grass")
-		print("is on tall grass")
+		# check if there's a tall grass tile at this position
+		var grass_tile_source_id = tall_grass_layer.get_cell_source_id(tile_below)
+		is_on_tall_grass = grass_tile_source_id != -1  # -1 means no tile
 		
-		# calculate probability of a random encounter
-		random_encounter = randf()
-		print(random_encounter)
-		if random_encounter > probability:
-			battle()
-	else:
+		if is_on_tall_grass:
+			print("Stepped on tall grass!")
+			
+			# calculate probability of a random encounter
+			random_encounter = randf()
+			print("Random encounter roll: ", random_encounter, " (need > ", probability, ")")
+			
+			if random_encounter > probability:
+				print("Battle triggered!")
+				battle()
+		else:
+			print("Not on tall grass")
+	
+	# Update grass status
+	if not is_on_tall_grass:
 		is_on_tall_grass = false
 
 

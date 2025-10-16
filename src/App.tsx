@@ -195,7 +195,7 @@ print("This should trigger the game!")`)
           </button>
 
           {/* <button onClick={sendEnterToGame} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
-            🎮 Send Enter to Game
+            Send Enter to Game
           </button> */}
 
           <pre className="python-output-compact">

@@ -7,4 +7,8 @@ export const supabase = createClient(
 )
 
 
-export const updateDB = print()
+// export const updateDB = print()
+
+export const updateDB = () => {
+  console.log('Database update function called')
+} // REMOVE WHEN DONE WITH DB (MADE BY ADIT)
