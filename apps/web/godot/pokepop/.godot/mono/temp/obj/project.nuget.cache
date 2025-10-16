@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "+QAesB1ijUk=",
+  "success": true,
+  "projectFilePath": "/Users/shir0kuma_madao/Desktop/PUK/NeuroGen-Gametify-Project/apps/web/godot/pokepop/PokePoP.csproj",
+  "expectedPackageFiles": [
+    "/Users/shir0kuma_madao/.nuget/packages/godot.sourcegenerators/4.4.1/godot.sourcegenerators.4.4.1.nupkg.sha512",
+    "/Users/shir0kuma_madao/.nuget/packages/godotsharp/4.4.1/godotsharp.4.4.1.nupkg.sha512",
+    "/Users/shir0kuma_madao/.nuget/packages/godotsharpeditor/4.4.1/godotsharpeditor.4.4.1.nupkg.sha512",
+    "/Users/shir0kuma_madao/.nuget/packages/microsoft.netcore.app.ref/8.0.20/microsoft.netcore.app.ref.8.0.20.nupkg.sha512",
+    "/Users/shir0kuma_madao/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.20/microsoft.aspnetcore.app.ref.8.0.20.nupkg.sha512"
+  ],
+  "logs": []
+}

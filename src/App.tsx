@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { supabase } from './lib/supabase'  // added supabase lib 
+import { usePyodide } from './lib/usepyodide' // added for include the editor 
+
+// import store files modul 
+import { runAndSavePython } from './lib/storeoutput'
+import { runPython } from './lib/storeoutput'
 
 function App() {
   // Python Editor States
@@ -11,14 +17,13 @@ print("This should trigger the game!")`)
   const [output, setOutput] = useState('')
   const [gameStatus, setGameStatus] = useState('menu') // 'menu', 'battle', 'unknown'
 
-  // Load Pyodide once
+  //iniitial state of pyodide 
+  const pyodideInstance = usePyodide()
   useEffect(() => {
-    const load = async () => {
-      const pyodideInstance = await (window as any).loadPyodide()
+    if (pyodideInstance) {
       setPyodide(pyodideInstance)
       setOutput('Pyodide loaded')
     }
-    load()
 
     // Listen for messages from Godot
     const handleMessage = (event: MessageEvent) => {
@@ -34,6 +39,39 @@ print("This should trigger the game!")`)
     return () => {
       window.removeEventListener('message', handleMessage)
     }
+  }, [pyodideInstance])
+
+  // Retesting connection to DB 
+  const [count, setCount] = useState(0)
+  const [ok, setOk] = useState('checking…') // Added new state for checking database connection 
+
+  // testing store count method 
+  async function updateCountInDB(newCount: number) {
+    const { data: { user }, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !user) { console.error(userErr || 'No user'); return }
+
+    const { error } = await supabase
+      .from('testcount') // or 'test_count' — match your actual table name
+      .upsert([{ id: user.id, totalcount: newCount }])
+
+    if (error) console.error('DB upsert error:', error)
+  }
+
+  // method for testing data connection 
+  useEffect(() => {
+    (async () => {
+      // Optional: create an anonymous session if none exists
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        const { error } = await supabase.auth.signInAnonymously()
+        if (error) return setOk('error: ' + error.message)
+      }
+
+      // Now report the current session state
+      const { data: { session: s }, error } = await supabase.auth.getSession()
+      if (error) setOk('error: ' + error.message)
+      else setOk(s ? 'session exists' : 'no session yet')
+    })()
   }, [])
 
   function handleGodotMessage(data: any) {
@@ -105,6 +143,7 @@ print("This should trigger the game!")`)
           // allow="fullscreen"
         />
       </div>
+
       
       {/* Right Side - Python Editor */}
       <div className="right-panel">
@@ -130,9 +169,26 @@ print("This should trigger the game!")`)
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+                // Ensure that tab is working in the editor 
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const target = e.target as HTMLTextAreaElement
+                const start = target.selectionStart
+                const end = target.selectionEnd
+                const newValue = code.substring(0, start) + '    ' + code.substring(end)
+                setCode(newValue)
+                // Set cursor after inserted tab
+                setTimeout(() => {
+                  target.selectionStart = target.selectionEnd = start + 4
+                }, 0)
+              }
+            }}
+            rows={6}
             placeholder="Write your Python code here..."
             className="python-textarea-compact"
           />
+
 
           <button onClick={runPythonCode} className="run-button-compact">
             ▶️ Run
@@ -145,6 +201,16 @@ print("This should trigger the game!")`)
           <pre className="python-output-compact">
             {output}
           </pre>
+          <div>Supabase status: {ok}</div>  {/* Added for checking status */}
+           <div className="card">
+            <button onClick={async () => {
+              const newCount = count + 1
+              setCount(newCount) /* Added for stored count in database */
+              await updateCountInDB(newCount)
+            }}>
+              test count is {count}
+            </button>
+          </div>
         </div>
       </div>
     </div>
