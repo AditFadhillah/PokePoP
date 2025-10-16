@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { supabase } from './lib/supabase'  // added supabase lib 
-import { usePyodide } from './lib/usepyodide' // added for include the editor 
-
-// import store files modul 
-import { runAndSavePython } from './lib/storeoutput'
-import { runPython } from './lib/storeoutput'
+import { usePyodide } from './lib/usepyodide' // added for include the editor
 
 function App() {
   // Python Editor States

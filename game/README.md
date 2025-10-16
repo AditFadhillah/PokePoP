@@ -92,7 +92,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Bidirectional"
+git commit -m "TESTING TO RUN"
 git push origin main
 
 npm run build
