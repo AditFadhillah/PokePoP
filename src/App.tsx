@@ -16,14 +16,14 @@ print("This should trigger the game!")`)
     const load = async () => {
       const pyodideInstance = await (window as any).loadPyodide()
       setPyodide(pyodideInstance)
-      setOutput('✅ Pyodide loaded')
+      setOutput('Pyodide loaded')
     }
     load()
 
     // Listen for messages from Godot
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'GODOT_MESSAGE') {
-        console.log('📨 Received message from Godot:', event.data)
+        console.log('Received message from Godot:', event.data)
         handleGodotMessage(event.data.data)
       }
     }
@@ -38,18 +38,18 @@ print("This should trigger the game!")`)
 
   function handleGodotMessage(data: any) {
     if (data.type === 'BATTLE_STARTED') {
-      console.log('⚔️ Battle started! Updating Python code...')
+      console.log('Battle started! Updating Python code...')
       setGameStatus('battle')
       setCode('print("in battle")')
-      setOutput('⚔️ Battle started! Code updated automatically.')
+      setOutput('Battle started! Code updated automatically.')
     } else if (data.type === 'BATTLE_ENDED') {
-      console.log('🏁 Battle ended! Restoring Python code...')
+      console.log('Battle ended! Restoring Python code...')
       setGameStatus('menu')
       setCode(`# Test the game communication
 print("Hello from Python!")
 print("Click Enter")
 print("This should trigger the game!")`)
-      setOutput('🏁 Battle ended! Code restored.')
+      setOutput('Battle ended! Code restored.')
     }
   }
 
@@ -66,14 +66,14 @@ print("This should trigger the game!")`)
       await pyodide.runPythonAsync(code)
 
       const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
-      setOutput(outputText || '✅ No output')
+      setOutput(outputText || 'No output')
       
       // Check if output contains "Click Enter" and send signal to game
       if (outputText && outputText.toLowerCase().includes('click enter')) {
         sendEnterToGame()
       }
     } catch (err: any) {
-      setOutput('❌ Error: ' + err.message)
+      setOutput('Error: ' + err.message)
     }
   }
 
@@ -87,7 +87,7 @@ print("This should trigger the game!")`)
         action: 'key_press',
         key: 'enter'
       }, '*')
-      console.log('🎮 Sent ENTER signal to game!')
+      console.log('Sent ENTER signal to game!')
     }
   }
 
@@ -95,14 +95,14 @@ print("This should trigger the game!")`)
     <div className="app-container">
       {/* Game Section - Left Side */}
       <div className="game-section">
-        <h2>Pokemon Clone</h2>
+        <h2>Creature Collector</h2>
         <iframe 
           src="/PokePoP/Pokemon_Clone.html"
-          width="600"
-          height="400"
+          width="100%"
+          height="100%"
           title="Pokemon Clone Game"
           className="game-frame"
-          allow="fullscreen"
+          // allow="fullscreen"
         />
       </div>
       
@@ -118,19 +118,18 @@ print("This should trigger the game!")`)
             padding: '5px 10px',
             marginBottom: '10px',
             borderRadius: '5px',
-            backgroundColor: gameStatus === 'battle' ? '#ff4444' : '#44ff44',
+            backgroundColor: gameStatus === 'battle' ? '#bd3a3aff' : '#37bc37ff',
             color: 'white',
             textAlign: 'center',
             fontSize: '12px',
             fontWeight: 'bold'
           }}>
-            {gameStatus === 'battle' ? '⚔️ IN BATTLE' : '🏠 MENU/OVERWORLD'}
+            {gameStatus === 'battle' ? 'IN BATTLE' : 'MENU/OVERWORLD'}
           </div>
           
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            rows={6}
             placeholder="Write your Python code here..."
             className="python-textarea-compact"
           />
@@ -139,9 +138,9 @@ print("This should trigger the game!")`)
             ▶️ Run
           </button>
 
-          <button onClick={sendEnterToGame} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
+          {/* <button onClick={sendEnterToGame} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
             🎮 Send Enter to Game
-          </button>
+          </button> */}
 
           <pre className="python-output-compact">
             {output}

@@ -23,6 +23,7 @@ config/icon="res://Assets/Sprites/Icon/Poké_Ball_icon.svg.png"
 
 SignalManager="*res://Scenes/Global/signal_manager.gd"
 GameManager="*res://Scenes/Global/game_manager.gd"
+SupabaseManager="*res://Scenes/Global/supabase_manager.gd"
 JSBridge="*res://Scenes/Global/js_bridge.gd"
 
 [display]

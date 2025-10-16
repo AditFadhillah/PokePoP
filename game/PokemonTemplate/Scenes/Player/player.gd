@@ -16,7 +16,7 @@ var current_tile: Vector2i
 var rng = RandomNumberGenerator.new()
 var random_encounter
 var battle_scene = preload("res://Scenes/Battle/battle.tscn")
-var probability = 0.85
+var probability = 1
 
 
 func _ready():
