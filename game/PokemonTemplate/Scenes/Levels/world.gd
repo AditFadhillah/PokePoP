@@ -28,10 +28,6 @@ func _ready():
 	JSBridge.pokemon_inventory_updated_from_js.connect(_on_pokemon_inventory_updated_from_react)
 	print("Connected pokemon_inventory_updated_from_js signal")
 	
-	# Listen for capture triggers from React
-	JSBridge.capture_triggered_from_js.connect(_on_capture_triggered_from_react)
-	print("Connected capture_triggered_from_js signal")
-	
 	# Listen for test Pokemon signal from React
 	JSBridge.test_pokemon_signal.connect(_on_test_pokemon_signal)
 	print("Connected test_pokemon_signal signal")
