@@ -2,9 +2,8 @@
 extends Control
 
 @onready var enemy = $CanvasLayer/Enemy
-@onready var attack1_btn = $CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn1
-@onready var attack2_btn = $CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn2
-@onready var attack3_btn = $CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn3
+@onready var attack_btn = $CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn1
+@onready var run_btn = $CanvasLayer/UI/PlayerMenu/FightMenu/RunBtn
 @onready var enemy_hp_bar = $CanvasLayer/Enemy/EnemyHPBar
 @onready var anim = $CanvasLayer/AnimationPlayer
 @onready var text_timer = $CanvasLayer/UI/DialogBox/TextTimer
@@ -22,8 +21,11 @@ var text_num = 0
 var is_dialog_finished = false
 var is_menu_visible = false
 var begin_battle = false
+var capture_in_progress = false  # Flag to prevent input during capture
 
-var thunder_scene = preload("res://Scenes/Battle/ThunderShock.tscn")
+# Random Pokemon encounter system
+var pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
+var current_pokemon = ""
 
 func _ready():
 	SignalManager.connect("btn_pos", move_menu_arrow)
@@ -31,19 +33,32 @@ func _ready():
 	SignalManager.connect("enemy_animation_finished", on_enemy_animation_finished)
 	SignalManager.connect("enemy_dead", on_enemy_dead)
 	SignalManager.connect("player_dead", on_player_dead)
+	
+	# Select random Pokemon for this battle
+	current_pokemon = pokemon_pool[randi() % pokemon_pool.size()]
+
+	# Generate random level (1-3 for variety)
+	var random_level = randi_range(1, 3)
+	
+	# Set the enemy to display the selected Pokemon
+	enemy.set_pokemon(current_pokemon, random_level)
+	
+	# Update button text to reflect capture mechanic
+	attack_btn.text = "CAPTURE"
+	
 	anim.play("fade_in")
 	dialog_box.visible = true
-	dialog.visible = false
+	dialog.visible = false	
 	$BattleMusic.play()
 
 func _process(_delta):
 	click_to_continue.visible = is_dialog_finished
 	
 	if begin_battle:
-		show_dialog("A wild RATTATA appeared!")
+		show_dialog("A wild " + current_pokemon + " appeared!")
 		begin_battle = false
 		
-	if Input.is_action_just_pressed("ui_accept") and !is_menu_visible and enemy.hp > 0:
+	if Input.is_action_just_pressed("ui_accept") and !is_menu_visible and !capture_in_progress and enemy.hp > 0:
 		if is_dialog_finished:
 			dialog.visible = false
 			dialog_box.visible = false
@@ -51,18 +66,17 @@ func _process(_delta):
 			anim.play("hide")
 			menu.visible = true
 			is_menu_visible = true
-			attack1_btn.grab_focus()
+			attack_btn.grab_focus()
 		else:
 			dialog.visible_characters = dialog.text.length()
 
 func on_enemy_dead():
-	# exit battle
-	show_dialog("Enemy RATTATA fainted")
-	anim.play("fade_out")
+	# No longer needed for capture system
+	pass
 
 func on_player_dead():
-	show_dialog("Player blacked out!")
-	anim.play("fade_out")
+	# No longer needed for capture system  
+	pass
 
 	
 func move_menu_arrow(x,y):
@@ -105,29 +119,30 @@ func next_text() -> void:
 	return
 
 func _on_attack_btn_1_pressed():
+	# Attack instantly defeats/captures the Pokémon
 	is_menu_visible = false
-	show_dialog("Pikachu used " + attack1_btn.show_text())
-	player.animation_player.play("tackle")
-	await get_tree().create_timer(1.0).timeout 
-	SignalManager.enemy_hp_changed.emit(10)
-
-func _on_attack_btn_2_pressed():
-	is_menu_visible = false
-	show_dialog("Pikachu used " + attack2_btn.show_text())
-	player.animation_player.play("thunder")
-	var thunder_instance = thunder_scene.instantiate()
-	canvas.add_child(thunder_instance)
-	thunder_instance.position = $CanvasLayer/FX_pos.position	
-	await get_tree().create_timer(1.0).timeout 
-	SignalManager.enemy_hp_changed.emit(15)
+	capture_in_progress = true  # Prevent input during capture
+	show_dialog("You captured " + current_pokemon + "!")
 	
-
-func _on_attack_btn_3_pressed():
-	is_menu_visible = false
-	show_dialog("Pikachu used " + attack3_btn.show_text())
-	player.animation_player.play("tackle")
-	await get_tree().create_timer(1.0).timeout 
-	SignalManager.enemy_hp_changed.emit(8)
+	# Calculate points based on level
+	var enemy_level = enemy.current_pokemon_level
+	var points = enemy_level * 100  # Level 1 = 100pts, Level 2 = 200pts, etc.
+	
+	# Add to inventory using GameManager (local storage)
+	GameManager.add_pokemon_to_inventory(current_pokemon, enemy_level, points)
+	
+	# Send capture data to React/Database
+	if JSBridge:
+		JSBridge.send_message_to_react("POKEMON_CAPTURED", {
+			"pokemon_name": current_pokemon,
+			"level": enemy_level,
+			"points": points,
+			"captured_at": Time.get_datetime_string_from_system()
+		})
+	
+	# Wait a moment then exit battle
+	await get_tree().create_timer(2.0).timeout 
+	anim.play("fade_out")
 
 func _on_run_btn_pressed():
 	# exit battle
@@ -149,16 +164,13 @@ func _on_animation_player_animation_finished(anim_name):
 			JSBridge.send_message_to_react("BATTLE_STARTED", {"message": "in battle"})
 
 func on_enemy_turn():
-	if enemy.hp > 0:
-		show_dialog("RATTATA used quick attack!")
-		SignalManager.player_hp_changed.emit(5)
-		enemy.animation_player.play("attack")
+	# No longer needed for capture system
+	pass
 
 func on_player_animation_finished():
-	enemy.animation_player.play("hit")
-	await get_tree().create_timer(1.0).timeout 
-	GameManager.turn = "enemy"
-	on_enemy_turn()
+	# No longer needed for capture system
+	pass
 
 func on_enemy_animation_finished():
-	GameManager.turn = "player"
+	# No longer needed for capture system
+	pass

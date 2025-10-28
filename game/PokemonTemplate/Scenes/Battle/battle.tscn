@@ -233,38 +233,14 @@ texture = ExtResource("16_wuoch")
 [node name="AttackBtn1" parent="CanvasLayer/UI/PlayerMenu/FightMenu" instance=ExtResource("6_3m0kj")]
 layout_mode = 0
 offset_left = 278.0
-offset_top = 248.0
+offset_top = 280.0
 offset_right = 432.0
-offset_bottom = 266.0
-focus_neighbor_right = NodePath("../AttackBtn2")
-focus_neighbor_bottom = NodePath("../AttackBtn3")
-mouse_default_cursor_shape = 2
-texture_normal = null
-text = "TACKLE"
-
-[node name="AttackBtn2" parent="CanvasLayer/UI/PlayerMenu/FightMenu" instance=ExtResource("6_3m0kj")]
-layout_mode = 0
-offset_left = 430.0
-offset_top = 248.0
-offset_right = 598.0
-offset_bottom = 266.0
-focus_neighbor_left = NodePath("../AttackBtn1")
+offset_bottom = 298.0
+focus_neighbor_right = NodePath("../RunBtn")
 focus_neighbor_bottom = NodePath("../RunBtn")
 mouse_default_cursor_shape = 2
 texture_normal = null
-text = "THUNDER SHOCK"
-
-[node name="AttackBtn3" parent="CanvasLayer/UI/PlayerMenu/FightMenu" instance=ExtResource("6_3m0kj")]
-layout_mode = 0
-offset_left = 278.0
-offset_top = 281.0
-offset_right = 430.0
-offset_bottom = 299.0
-focus_neighbor_top = NodePath("../AttackBtn1")
-focus_neighbor_right = NodePath("../RunBtn")
-mouse_default_cursor_shape = 2
-texture_normal = null
-text = "QUICK ATTACK"
+text = "CAPTURE"
 
 [node name="RunBtn" parent="CanvasLayer/UI/PlayerMenu/FightMenu" instance=ExtResource("6_3m0kj")]
 layout_mode = 0
@@ -272,8 +248,8 @@ offset_left = 432.0
 offset_top = 280.0
 offset_right = 560.0
 offset_bottom = 298.0
-focus_neighbor_left = NodePath("../AttackBtn3")
-focus_neighbor_top = NodePath("../AttackBtn2")
+focus_neighbor_left = NodePath("../AttackBtn1")
+focus_neighbor_top = NodePath("../AttackBtn1")
 mouse_default_cursor_shape = 2
 texture_normal = null
 text = "RUN"
@@ -381,7 +357,5 @@ stream = ExtResource("13_5h7kn")
 volume_db = 10.0
 
 [connection signal="pressed" from="CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn1" to="." method="_on_attack_btn_1_pressed"]
-[connection signal="pressed" from="CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn2" to="." method="_on_attack_btn_2_pressed"]
-[connection signal="pressed" from="CanvasLayer/UI/PlayerMenu/FightMenu/AttackBtn3" to="." method="_on_attack_btn_3_pressed"]
 [connection signal="pressed" from="CanvasLayer/UI/PlayerMenu/FightMenu/RunBtn" to="." method="_on_run_btn_pressed"]
 [connection signal="animation_finished" from="CanvasLayer/AnimationPlayer" to="." method="_on_animation_player_animation_finished"]

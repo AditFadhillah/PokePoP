@@ -6,8 +6,77 @@ export const supabase = createClient(
   { auth: { persistSession: true, autoRefreshToken: true } }
 )
 
+// Database types for TypeScript support
+export interface Trainer {
+  id: string
+  user_id: string
+  name: string
+  total_points: number
+  created_at: string
+  updated_at: string
+}
 
-// export const updateDB = print()
+export interface PokemonInventory {
+  id: string
+  trainer_id: string
+  pokemon_name: string
+  level: number
+  points: number
+  captured_at: string
+}
+
+// Helper functions for database operations
+export const dbHelpers = {
+  // Get trainer by name and user
+  async getTrainerByName(name: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data, error } = await supabase
+      .from('trainers')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('name', name)
+      .single()
+
+    return { data, error }
+  },
+
+  // Get all trainers for current user
+  async getUserTrainers() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: 'No user' }
+
+    const { data, error } = await supabase
+      .from('trainers')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('total_points', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Get leaderboard (all trainers)
+  async getLeaderboard(limit = 10) {
+    const { data, error } = await supabase
+      .from('trainer_leaderboard')
+      .select('*')
+      .limit(limit)
+
+    return { data, error }
+  },
+
+  // Get Pokemon inventory for a trainer
+  async getTrainerInventory(trainerId: string) {
+    const { data, error } = await supabase
+      .from('pokemon_inventory')
+      .select('*')
+      .eq('trainer_id', trainerId)
+      .order('captured_at', { ascending: false })
+
+    return { data, error }
+  }
+}
 
 export const updateDB = () => {
   console.log('Database update function called')

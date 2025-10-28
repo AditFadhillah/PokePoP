@@ -39,12 +39,12 @@ func _process(_delta):
 func _physics_process(_delta):
 	velocity = lerp(velocity, Vector2.ZERO, FRICTION)
 	
-	if !GameManager.is_battle:
+	if !GameManager.is_battle and !GameManager.is_inventory:
 		move()
 		get_tile_below_player()
 	
 func get_input():
-	if GameManager.is_battle:
+	if GameManager.is_battle or GameManager.is_inventory:
 		move_direction = Vector2.ZERO
 	else:
 		# movement

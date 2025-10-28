@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://cb43ulwcqwq6d"]
+[gd_scene load_steps=11 format=4 uid="uid://cb43ulwcqwq6d"]
 
 [ext_resource type="Script" uid="uid://ceu2l4os1tuk4" path="res://Scenes/Levels/world.gd" id="1_fj43f"]
 [ext_resource type="PackedScene" uid="uid://bnyjx4jfwpyc0" path="res://Scenes/Player/player.tscn" id="2_ln808"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://devvewfksln8k" path="res://Scenes/Player/camera_2d.tscn" id="3_frn68"]
 [ext_resource type="PackedScene" uid="uid://cp86d0fvpgoil" path="res://Scenes/monster/pokemonster.tscn" id="5_5fkqq"]
 [ext_resource type="AudioStream" uid="uid://bahjgs08ae7d8" path="res://Assets/Music/LittlerootTown.wav" id="7_yscmt"]
+[ext_resource type="FontFile" uid="uid://dumivhttkti0d" path="res://Assets/Fonts/PKMN RBYGSC.ttf" id="8_font"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1ih2d"]
 texture = ExtResource("2_spn66")
@@ -75,6 +76,7 @@ custom_data_layer_0/type = 1
 sources/4 = SubResource("TileSetAtlasSource_1ih2d")
 
 [node name="World" type="Node2D"]
+position = Vector2(0, 1)
 script = ExtResource("1_fj43f")
 
 [node name="Tiles" type="Node2D" parent="."]
@@ -160,5 +162,46 @@ position = Vector2(450, 400)
 [node name="LittleRootTownMusic" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("7_yscmt")
 volume_db = 10.0
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="TrainerLabel" type="Label" parent="UI"]
+anchors_preset = 2
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 150.0
+offset_bottom = 30.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 12
+text = "Trainer: Loading..."
+vertical_alignment = 1
+
+[node name="InventoryIndicator" type="Label" parent="UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -120.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 30.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("8_font")
+theme_override_font_sizes/font_size = 12
+text = "Inventory (E)"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [editable path="Player/Camera2D"]

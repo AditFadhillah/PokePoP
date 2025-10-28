@@ -4,8 +4,10 @@ extends Node2D
 @onready var attack_damage = 4
 @onready var hp_bar = $PlayerHPBar
 @export var max_hp = 25
+@export var player_level = 5  # Pikachu's level
 var hp = 25
 var is_alive = true
+var player_level_label: Label
 
 func _ready():
 	SignalManager.connect("player_hp_changed", on_player_hp_changed)
@@ -13,11 +15,24 @@ func _ready():
 	hp_bar.max_value = max_hp
 	hp_bar.value = max_hp
 	is_alive = true
+	
+	# Find the PlayerLv label directly
+	player_level_label = get_node("PlayerLv") as Label
+	
+	# Set Pikachu's level display
+	if player_level_label:
+		player_level_label.text = str(player_level)
+		print("✅ Pikachu level successfully set to: Lv", player_level)
+	else:
+		print("❌ ERROR: PlayerLv label not found!")
+		print("Available children:")
+		for child in get_children():
+			print("  - ", child.name, " (", child.get_class(), ")")
 
 func get_hp():
 	return hp
 
-func _process(delta):
+func _process(_delta):
 	if hp <= 0 and is_alive:
 		print("player is dead")
 		SignalManager.emit_signal("player_dead")

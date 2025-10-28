@@ -5,5 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/PokePoP',
+  server: {
+    fs: {
+      allow: ['..']
+    }
+  },
+  publicDir: 'public'
 })
 
