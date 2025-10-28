@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { supabase } from './lib/supabase'  // Re-enabled supabase lib 
-import { usePyodide } from './lib/usepyodide' // Fixed import path
+import { supabase } from './lib/databaseFunctions'  // Use neurogen's renamed file
+import { usePyodide } from './lib/loadPythonEditor' // Use neurogen's renamed file
+
+// import store files module from neurogen
+import { runPython, runAndSavePython } from './lib/pythonEvalFunction'
 
 function App() {
   // Python Editor States
