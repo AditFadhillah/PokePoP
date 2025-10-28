@@ -129,7 +129,7 @@ function App() {
 
     try {
       // First check if trainer exists
-      const { data: existingTrainer, error: fetchError } = await supabase
+      const { data: existingTrainer, error: _fetchError } = await supabase
         .from('trainers')
         .select('*')
         .eq('user_id', user.id)
