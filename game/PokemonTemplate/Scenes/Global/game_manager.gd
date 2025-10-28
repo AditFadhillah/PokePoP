@@ -1,49 +1,62 @@
-extends Node2D
+extends Node
 
+# Game state variables
 var turn = "player"
 var is_battle = false
 var is_dialog = false
-var is_inventory = false  # Flag for inventory state
+var is_inventory = false
 
-# Player info
-var trainer_name = ""   # Will be set from database
-
-# Inventory system
-var captured_pokemon = []  # Array to store captured Pokémon
-var total_points = 0       # Total points from captures
+# Trainer and Pokemon data
+var trainer_name = ""
+var captured_pokemon = []
+var total_points = 0
 
 func _ready():
 	is_battle = false
+	print("GameManager initialized")
 
-# Add a captured Pokémon to inventory
+# Trainer management functions
+func set_trainer_name(name: String):
+	trainer_name = name
+	print("GameManager: Trainer name set to: ", trainer_name)
+
+func get_trainer_name() -> String:
+	return trainer_name
+
+# Pokemon inventory management
 func add_pokemon_to_inventory(pokemon_name: String, level: int, points: int):
 	var pokemon_data = {
 		"name": pokemon_name,
 		"level": level,
 		"points": points,
-		"capture_time": Time.get_datetime_string_from_system()
+		"captured_at": Time.get_datetime_string_from_system()
 	}
 	captured_pokemon.append(pokemon_data)
 	total_points += points
-	print("Added to inventory: ", pokemon_name, " Lv", level, " (", points, " points)")
-	print("Total Pokémon: ", captured_pokemon.size(), " | Total Points: ", total_points)
+	print("GameManager: Added Pokemon to inventory: ", pokemon_data)
+	print("GameManager: Total points now: ", total_points)
 
-# Get all captured Pokémon
 func get_captured_pokemon() -> Array:
 	return captured_pokemon
 
-# Get total points
 func get_total_points() -> int:
 	return total_points
 
-# Get trainer name
-func get_trainer_name() -> String:
-	return trainer_name
-
-# Set trainer name
-func set_trainer_name(name: String):
-	trainer_name = name
-
-# Get inventory summary
-func get_inventory_summary() -> String:
-	return "Pokémon: " + str(captured_pokemon.size()) + " | Points: " + str(total_points)
+func load_pokemon_from_external_data(pokemon_data: Array):
+	# Clear existing and load new data
+	captured_pokemon.clear()
+	total_points = 0
+	
+	for pokemon in pokemon_data:
+		if typeof(pokemon) == TYPE_DICTIONARY:
+			var pokemon_dict = {
+				"name": pokemon.get("pokemon_name", "Unknown"),
+				"level": int(pokemon.get("level", 1)),
+				"points": int(pokemon.get("points", 100)),
+				"captured_at": pokemon.get("captured_at", Time.get_datetime_string_from_system())
+			}
+			captured_pokemon.append(pokemon_dict)
+			total_points += pokemon_dict.points
+	
+	print("GameManager: Loaded ", captured_pokemon.size(), " Pokemon from external data")
+	print("GameManager: Total points: ", total_points)

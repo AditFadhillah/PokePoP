@@ -6,7 +6,7 @@ import { usePyodide } from './lib/usepyodide' // Fixed import path
 function App() {
   // Python Editor States
   const [pyodide, setPyodide] = useState<any>(null)
-  const [code, setCode] = useState(`print("Click Enter")`)
+  const [code, setCode] = useState(`print("CATERPIE")\n# Try any Pokemon: BULBASAUR, CATERPIE, EEVEE, PIDGEY, VULPIX, RATTATA`)
   const [output, setOutput] = useState('')
   const [gameStatus, setGameStatus] = useState('menu') // 'menu', 'battle', 'unknown'
 
@@ -37,8 +37,17 @@ function App() {
   // Load CSV trainers
   async function loadCSVTrainers() {
     try {
+      console.log('Attempting to fetch CSV from:', window.location.origin + '/test_trainer.csv')
       const response = await fetch('/test_trainer.csv')
+      console.log('CSV fetch response status:', response.status)
+      
+      if (!response.ok) {
+        console.error('CSV fetch failed with status:', response.status)
+        return []
+      }
+      
       const csvText = await response.text()
+      console.log('CSV raw text:', csvText)
       const trainers = parseCSV(csvText)
       
       console.log('Loaded CSV trainers:', trainers)
@@ -83,10 +92,11 @@ function App() {
       setTrainerName(trainer.name)
       
       // Load their Pokemon
-      await loadCSVPokemonInventory(trainer.id)
+      const pokemonData = await loadCSVPokemonInventory(trainer.id)
       
-      // Send to game
+      // Send trainer and Pokemon data to game
       sendTrainerToGame(trainer.name)
+      sendPokemonInventoryToGame(pokemonData)
       
       console.log('Selected CSV trainer:', trainer)
       return trainer
@@ -322,18 +332,9 @@ function App() {
   }, [])
 
   async function initializeApp() {
-    console.log('Initializing app with CSV data...')
-    
-    // Load CSV trainer data instead of database
-    const trainer = await getCSVTrainer()
-    
-    if (trainer) {
-      console.log('Successfully loaded CSV trainer:', trainer.name)
-      setOutput(`Loaded test trainer: ${trainer.name} with ${pokemonInventory.length} Pokemon`)
-    } else {
-      console.log('No CSV trainer found')
-      setOutput('No test trainer found in CSV')
-    }
+    console.log('Initializing app...')
+    // Removed automatic CSV loading that was causing 404 errors
+    setOutput('App initialized - use buttons to load test data if needed')
   }
 
   function handleGodotMessage(data: any) {
@@ -345,20 +346,38 @@ function App() {
     } else if (data.type === 'BATTLE_ENDED') {
       console.log('Battle ended! Restoring Python code...')
       setGameStatus('menu')
-      setCode(`# Test the game communication
-print("Hello from Python!")
-print("Click Enter")
-print("This should trigger the game!")`)
+      setCode(`print("Click Enter")`)
       setOutput('Battle ended! Code restored.')
     } else if (data.type === 'POKEMON_CAPTURED') {
       console.log('Pokemon captured!', data)
       handlePokemonCapture(data)
     } else if (data.type === 'request_current_trainer') {
       console.log('Godot requesting current trainer')
-      // Send current trainer to Godot
+      // Send current trainer to Godot, or load CSV data if no trainer exists
       if (currentTrainer) {
+        console.log('Sending existing trainer to Godot:', currentTrainer.name)
         sendTrainerToGame(currentTrainer.name)
+        if (pokemonInventory.length > 0) {
+          sendPokemonInventoryToGame(pokemonInventory)
+        }
+      } else {
+        console.log('No current trainer, loading CSV data for Godot...')
+        getCSVTrainer().then(trainer => {
+          if (trainer) {
+            console.log('CSV trainer loaded and sent to Godot:', trainer.name)
+            setOutput(`Auto-loaded CSV trainer: ${trainer.name} for game`)
+          }
+        })
       }
+    } else if (data.type === 'request_csv_data') {
+      console.log('Godot requesting CSV data load')
+      // Load CSV data and send to Godot
+      getCSVTrainer().then(trainer => {
+        if (trainer) {
+          console.log('CSV data loaded and sent to Godot:', trainer.name)
+          setOutput(`CSV data loaded: ${trainer.name} with ${pokemonInventory.length} Pokemon`)
+        }
+      })
     }
   }
 
@@ -401,9 +420,26 @@ print("This should trigger the game!")`)
       const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
       setOutput(outputText || 'No output')
       
+      console.log('Python output:', outputText)
+      console.log('Contains "click enter":', outputText && outputText.toLowerCase().includes('click enter'))
+      
+      // Check for any Pokemon names
+      const pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
+      const foundPokemon = pokemon_pool.find(pokemon => 
+        outputText && outputText.toUpperCase().includes(pokemon)
+      )
+      console.log('Found Pokemon in output:', foundPokemon)
+      
       // Check if output contains "Click Enter" and send signal to game
       if (outputText && outputText.toLowerCase().includes('click enter')) {
+        console.log('Triggering sendEnterToGame()')
         sendEnterToGame()
+      }
+      
+      // Check if output contains any Pokemon name and send test Pokemon signal to game
+      if (foundPokemon) {
+        console.log('🧪 Detected Pokemon "', foundPokemon, '" - triggering sendTestPokemonToGame()')
+        sendTestPokemonToGame(outputText.trim())
       }
     } catch (err: any) {
       setOutput('Error: ' + err.message)
@@ -413,14 +449,41 @@ print("This should trigger the game!")`)
   function sendEnterToGame() {
     // Get the iframe element
     const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    console.log('sendEnterToGame() called')
+    console.log('Game frame found:', !!gameFrame)
+    console.log('Content window available:', !!(gameFrame && gameFrame.contentWindow))
+    
     if (gameFrame && gameFrame.contentWindow) {
       // Send a message to the Godot game
-      gameFrame.contentWindow.postMessage({
+      const message = {
         type: 'PRESS_ENTER',
         action: 'key_press',
         key: 'enter'
-      }, '*')
-      console.log('Sent ENTER signal to game!')
+      }
+      gameFrame.contentWindow.postMessage(message, '*')
+      console.log('Sent ENTER signal to game!', message)
+    } else {
+      console.warn('Cannot send ENTER signal - game frame or content window not available')
+    }
+  }
+
+  function sendTestPokemonToGame(pokemonText: string) {
+    // Send TEST_POKEMON signal with the actual text to Godot game
+    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    console.log('sendTestPokemonToGame() called with text:', pokemonText)
+    console.log('Game frame found:', !!gameFrame)
+    console.log('Content window available:', !!(gameFrame && gameFrame.contentWindow))
+    
+    if (gameFrame && gameFrame.contentWindow) {
+      // Send a message to the Godot game with the actual text
+      const message = {
+        type: 'TEST_POKEMON',
+        pokemon_text: pokemonText
+      }
+      gameFrame.contentWindow.postMessage(message, '*')
+      console.log('🧪 Sent TEST_POKEMON signal to game with text!', message)
+    } else {
+      console.warn('Cannot send TEST_POKEMON signal - game frame or content window not available')
     }
   }
 
@@ -435,6 +498,34 @@ print("This should trigger the game!")`)
       console.log('Sent trainer data to game:', trainerName)
     } else {
       console.warn('Game frame not found or not ready')
+    }
+  }
+
+  function sendPokemonInventoryToGame(pokemonData: any[]) {
+    // Send Pokemon inventory data to Godot game
+    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    if (gameFrame && gameFrame.contentWindow) {
+      gameFrame.contentWindow.postMessage({
+        type: 'POKEMON_INVENTORY_UPDATE',
+        pokemon_data: pokemonData
+      }, '*')
+      console.log('Sent Pokemon inventory to game:', pokemonData.length, 'Pokemon')
+    } else {
+      console.warn('Game frame not found or not ready for Pokemon inventory')
+    }
+  }
+
+  function triggerPokemonCapture(pokemonData: any) {
+    // Trigger a Pokemon capture in the Godot game
+    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    if (gameFrame && gameFrame.contentWindow) {
+      gameFrame.contentWindow.postMessage({
+        type: 'TRIGGER_CAPTURE',
+        pokemon_data: pokemonData
+      }, '*')
+      console.log('Triggered Pokemon capture in game:', pokemonData)
+    } else {
+      console.warn('Game frame not found or not ready for capture trigger')
     }
   }
 
@@ -703,10 +794,47 @@ print("This should trigger the game!")`)
           <button onClick={runPythonCode} className="run-button-compact">
             ▶️ Run
           </button>
-
-          {/* <button onClick={sendEnterToGame} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
-            Send Enter to Game
-          </button> */}
+          
+          <button onClick={() => {
+            console.log('Manual ENTER test button clicked')
+            sendEnterToGame()
+          }} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#4CAF50'}}>
+            🎮 Test ENTER
+          </button>
+          
+          <button onClick={() => {
+            console.log('Manual trainer test button clicked')
+            sendTrainerToGame('tester')
+          }} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#9C27B0'}}>
+            👤 Test Trainer
+          </button>
+          
+          <button onClick={() => {
+            console.log('Manual Pokemon inventory test button clicked')
+            if (pokemonInventory.length > 0) {
+              sendPokemonInventoryToGame(pokemonInventory)
+              setOutput(`Sent ${pokemonInventory.length} Pokemon to game`)
+            } else {
+              setOutput('No Pokemon inventory to send - load CSV data first')
+            }
+          }} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#FF5722'}}>
+            📦 Test Inventory
+          </button>
+          
+          <button onClick={async () => {
+            console.log('🐛 Trigger Level 2 Caterpie capture clicked')
+            
+            const captureData = {
+              pokemon_name: 'CATERPIE',
+              level: 2,
+              points: 200
+            }
+            console.log('Sending capture trigger:', captureData)
+            triggerPokemonCapture(captureData)
+            setOutput(`🐛 Triggered capture: Level 2 Caterpie (200 pts) - Check Godot console!`)
+          }} className="run-button-compact" style={{marginLeft: '10px', backgroundColor: '#8BC34A'}}>
+            🐛 Catch Caterpie
+          </button>
 
           <pre className="python-output-compact">
             {output}
@@ -744,6 +872,19 @@ print("This should trigger the game!")`)
               }
             }} style={{marginLeft: '10px', backgroundColor: '#4CAF50', color: 'white', padding: '8px', border: 'none', borderRadius: '4px'}}>
               Load CSV Test Data
+            </button>
+            
+            <button onClick={() => {
+              console.log('=== MANUAL CSV TO GAME TEST ===')
+              if (currentTrainer && pokemonInventory.length > 0) {
+                sendTrainerToGame(currentTrainer.name)
+                sendPokemonInventoryToGame(pokemonInventory)
+                setOutput(`Manually sent to game: ${currentTrainer.name} with ${pokemonInventory.length} Pokemon`)
+              } else {
+                setOutput('No CSV data to send - load CSV first')
+              }
+            }} style={{marginLeft: '10px', backgroundColor: '#FF9800', color: 'white', padding: '8px', border: 'none', borderRadius: '4px'}}>
+              Send CSV to Game
             </button>
           </div>
         </div>
