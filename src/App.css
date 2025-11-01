@@ -30,17 +30,25 @@ html, body {
   background-color: #000000;
 }
 
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .game-section {
   flex: 1;
   background-color: #2d3748;
   padding: 0.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  min-height: 0;
 }
 
 .game-section h2 {
@@ -57,6 +65,21 @@ html, body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
+}
+
+.trainer-section {
+  background-color: #2d3748;
+  padding: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.trainer-section h3 {
+  margin-top: 0;
+  color: #ffffff;
+  font-size: 1em;
 }
 
 .right-panel {

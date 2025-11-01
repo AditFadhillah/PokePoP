@@ -1,5 +1,8 @@
 extends Node
 
+# Signals
+signal pokemon_inventory_changed
+
 # Game state variables
 var turn = "player"
 var is_battle = false
@@ -13,12 +16,10 @@ var total_points = 0
 
 func _ready():
 	is_battle = false
-	print("GameManager initialized")
 
 # Trainer management functions
 func set_trainer_name(name: String):
 	trainer_name = name
-	print("GameManager: Trainer name set to: ", trainer_name)
 
 func get_trainer_name() -> String:
 	return trainer_name
@@ -33,8 +34,9 @@ func add_pokemon_to_inventory(pokemon_name: String, level: int, points: int):
 	}
 	captured_pokemon.append(pokemon_data)
 	total_points += points
-	print("GameManager: Added Pokemon to inventory: ", pokemon_data)
-	print("GameManager: Total points now: ", total_points)
+	
+	# Emit signal to notify UI components
+	pokemon_inventory_changed.emit()
 
 func get_captured_pokemon() -> Array:
 	return captured_pokemon
@@ -58,5 +60,5 @@ func load_pokemon_from_external_data(pokemon_data: Array):
 			captured_pokemon.append(pokemon_dict)
 			total_points += pokemon_dict.points
 	
-	print("GameManager: Loaded ", captured_pokemon.size(), " Pokemon from external data")
-	print("GameManager: Total points: ", total_points)
+	# Emit signal to notify UI components
+	pokemon_inventory_changed.emit()

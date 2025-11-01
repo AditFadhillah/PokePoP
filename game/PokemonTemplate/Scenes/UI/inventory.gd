@@ -9,6 +9,9 @@ func _ready():
 	# Show inventory with fade in
 	anim.play("fade_in")
 	
+	# Connect to GameManager signal for real-time updates
+	GameManager.pokemon_inventory_changed.connect(_on_pokemon_inventory_changed)
+	
 	# Populate inventory
 	refresh_inventory()
 
@@ -78,3 +81,7 @@ func _on_animation_player_animation_finished(anim_name):
 	if anim_name == "fade_in":
 		# Inventory is now fully opened
 		pass
+
+func _on_pokemon_inventory_changed():
+	# Called when GameManager's Pokemon inventory changes
+	refresh_inventory()
