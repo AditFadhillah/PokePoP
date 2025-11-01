@@ -1,11 +1,10 @@
-[gd_scene load_steps=11 format=4 uid="uid://cb43ulwcqwq6d"]
+[gd_scene load_steps=10 format=4 uid="uid://cb43ulwcqwq6d"]
 
 [ext_resource type="Script" uid="uid://ceu2l4os1tuk4" path="res://Scenes/Levels/world.gd" id="1_fj43f"]
 [ext_resource type="PackedScene" uid="uid://bnyjx4jfwpyc0" path="res://Scenes/Player/player.tscn" id="2_ln808"]
 [ext_resource type="Texture2D" uid="uid://bqrjt6s8il5wl" path="res://Assets/Tiles/world_tiles.png" id="2_spn66"]
 [ext_resource type="TileSet" uid="uid://gsl5c1dwa1xs" path="res://Scenes/Resources/Tilesets/worldNew.tres" id="2_vegga"]
 [ext_resource type="PackedScene" uid="uid://devvewfksln8k" path="res://Scenes/Player/camera_2d.tscn" id="3_frn68"]
-[ext_resource type="PackedScene" uid="uid://cp86d0fvpgoil" path="res://Scenes/monster/pokemonster.tscn" id="5_5fkqq"]
 [ext_resource type="AudioStream" uid="uid://bahjgs08ae7d8" path="res://Assets/Music/LittlerootTown.wav" id="7_yscmt"]
 [ext_resource type="FontFile" uid="uid://dumivhttkti0d" path="res://Assets/Fonts/PKMN RBYGSC.ttf" id="8_font"]
 
@@ -117,21 +116,6 @@ tile_set = ExtResource("2_vegga")
 texture_filter = 1
 tile_map_data = PackedByteArray("AAATAAEABAADAAAAAAAUAAEABAADAAAAAAAVAAEABAADAAAAAAAWAAEABAADAAAAAAAXAAEABAADAAAAAAAYAAEABAADAAAAAAAZAAEABAADAAAAAAAZAAIABAADAAAAAAAYAAIABAADAAAAAAAYAAMABAADAAAAAAAZAAMABAADAAAAAAAZAAQABAADAAAAAAAZAAUABAADAAAAAAAZAAYABAADAAAAAAATAAIABAADAAAAAAAYAAYABAADAAAAAAABABEABAADAAAAAAABABIABAADAAAAAAACABIABAADAAAAAAACABMABAADAAAAAAACABQABAADAAAAAAABABMABAADAAAAAAABABQABAADAAAAAAADABQABAADAAAAAAADABUABAADAAAAAAAEABUABAADAAAAAAAFABUABAADAAAAAAACABUABAADAAAAAAABABUABAADAAAAAAABABYABAADAAAAAAACABYABAADAAAAAAADABYABAADAAAAAAAEABYABAADAAAAAAAFABYABAADAAAAAAAGABYABAADAAAAAAAEAAEABAADAAAAAAAFAAEABAADAAAAAAAGAAEABAADAAAAAAAHAAEABAADAAAAAAAIAAEABAADAAAAAAAIAAIABAADAAAAAAAFAAIABAADAAAAAAAEAAIABAADAAAAAAARAAwABAADAAAAAAASAAwABAADAAAAAAATAAwABAADAAAAAAAUAAwABAADAAAAAAAVAAwABAADAAAAAAAVAA0ABAADAAAAAAAUAA0ABAADAAAAAAATAA0ABAADAAAAAAASAA0ABAADAAAAAAARAA0ABAADAAAAAAAVAA4ABAADAAAAAAAUAA4ABAADAAAAAAA=")
 tile_set = ExtResource("2_vegga")
-
-[node name="PokeMonster" parent="." instance=ExtResource("5_5fkqq")]
-visible = false
-z_index = 2
-position = Vector2(252, 168)
-
-[node name="PokeMonster2" parent="." instance=ExtResource("5_5fkqq")]
-visible = false
-z_index = 2
-position = Vector2(280, 40)
-
-[node name="PokeMonster3" parent="." instance=ExtResource("5_5fkqq")]
-visible = false
-z_index = 2
-position = Vector2(48, 296)
 
 [node name="TileMap" type="TileMap" parent="." groups=["tiles"]]
 visible = false
