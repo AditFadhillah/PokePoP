@@ -1,2 +1,3 @@
 id,user_id,name,total_points,created_at
-1,test-user-123,tester,1600,2025-10-28T00:00:00Z
+1,test-user-123,trainer1,1600,2025-10-28T00:00:00Z
+2,test-user-456,trainer2,900,2025-10-28T00:00:00Z
