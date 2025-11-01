@@ -518,7 +518,7 @@ function App() {
       <div className="left-panel">
         {/* Game Section */}
         <div className="game-section">
-          <h2>Creature Collector</h2>
+          <h3 style={{ color: '#ffffff', marginTop: 0 }}>Creature Collector</h3>
           <iframe 
             src="/PokePoP/game/web/Pokemon_Clone.html"
             width="100%"

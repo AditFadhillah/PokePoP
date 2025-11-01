@@ -119,14 +119,17 @@ tile_map_data = PackedByteArray("AAATAAEABAADAAAAAAAUAAEABAADAAAAAAAVAAEABAADAAA
 tile_set = ExtResource("2_vegga")
 
 [node name="PokeMonster" parent="." instance=ExtResource("5_5fkqq")]
+visible = false
 z_index = 2
 position = Vector2(252, 168)
 
 [node name="PokeMonster2" parent="." instance=ExtResource("5_5fkqq")]
+visible = false
 z_index = 2
 position = Vector2(280, 40)
 
 [node name="PokeMonster3" parent="." instance=ExtResource("5_5fkqq")]
+visible = false
 z_index = 2
 position = Vector2(48, 296)
 
@@ -167,9 +170,7 @@ volume_db = 10.0
 layer = 5
 
 [node name="TrainerLabel" type="Label" parent="UI"]
-anchors_preset = 2
-anchor_top = 0.0
-anchor_bottom = 0.0
+texture_filter = 1
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 150.0
@@ -184,11 +185,10 @@ text = "Trainer: Loading..."
 vertical_alignment = 1
 
 [node name="InventoryIndicator" type="Label" parent="UI"]
-anchors_preset = 3
+texture_filter = 1
+anchors_preset = 1
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = -120.0
 offset_top = 10.0
 offset_right = -10.0
