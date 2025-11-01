@@ -5,7 +5,6 @@ signal enter_pressed_from_js
 signal trainer_updated_from_js(trainer_name: String)
 signal pokemon_inventory_updated_from_js(pokemon_data: Array)
 signal capture_triggered_from_js(pokemon_data: Dictionary)
-signal test_pokemon_signal(pokemon_text: String)
 
 func _ready():
 	# Only setup JavaScript bridge if running in web export
@@ -39,10 +38,6 @@ func setup_js_bridge():
 					pokemon_data: event.data.pokemon_data
 				};
 			}
-		} else if (event.data && event.data.type === 'TEST_POKEMON') {
-			if (window.godot_js_bridge) {
-				window.godot_js_bridge.pendingTestPokemon = event.data.pokemon_text || 'CATERPIE';
-			}
 		}
 	});
 	
@@ -52,7 +47,6 @@ func setup_js_bridge():
 		pendingTrainerUpdate: null,
 		pendingInventoryUpdate: null,
 		pendingCapturetrigger: null,
-		pendingTestPokemon: null,
 		sendMessageToReact: function(message) {
 			window.parent.postMessage({
 				type: 'GODOT_MESSAGE',
@@ -176,21 +170,6 @@ func _check_js_messages():
 		var pokemon_data = capture_result.get("pokemon_data", {})
 		if pokemon_data.size() > 0:
 			capture_triggered_from_js.emit(pokemon_data)
-	
-	# Check for TEST_POKEMON signal
-	var test_pokemon_check = """
-	if (window.godot_js_bridge && window.godot_js_bridge.pendingTestPokemon) {
-		var text = window.godot_js_bridge.pendingTestPokemon;
-		window.godot_js_bridge.pendingTestPokemon = null;
-		text;
-	} else {
-		null;
-	}
-	"""
-	
-	var test_result = JavaScriptBridge.eval(test_pokemon_check)
-	if test_result && typeof(test_result) == TYPE_STRING:
-		test_pokemon_signal.emit(test_result)
 
 func simulate_enter_key():
 	# Create an input event for Enter key

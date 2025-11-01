@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
-import { supabase } from './lib/supabase'  // Re-enabled supabase lib 
-import { usePyodide } from './lib/usepyodide' // Fixed import path
+import { usePyodide } from './lib/usepyodide'
 
 function App() {
   // Python Editor States
@@ -12,11 +11,9 @@ function App() {
 
   // Trainer/Pokemon Inventory States
   const [currentTrainer, setCurrentTrainer] = useState<any>(null)
-  const currentTrainerRef = useRef<any>(null) // Add ref to persist value
-  const [trainerName, setTrainerName] = useState('')
+  const currentTrainerRef = useRef<any>(null)
   const [pokemonInventory, setPokemonInventory] = useState<any[]>([])
   const [totalPoints, setTotalPoints] = useState(0)
-  const [allTrainers, setAllTrainers] = useState<any[]>([])
 
   // CSV Data Functions (for testing without database)
   
@@ -48,7 +45,6 @@ function App() {
       const csvText = await response.text()
       const trainers = parseCSV(csvText)
       
-      setAllTrainers(trainers)
       return trainers
     } catch (error) {
       console.error('Error loading CSV trainers:', error)
@@ -90,9 +86,8 @@ function App() {
   async function getCSVTrainer() {
     const trainers = await loadCSVTrainers()
     if (trainers.length > 0) {
-      const trainer = trainers[0] // Get the "tester" trainer
+      const trainer = trainers[0]
       setCurrentTrainer(trainer)
-      setTrainerName(trainer.name)
       
       // Load their Pokemon filtered by trainer_id
       const pokemonData = await loadCSVPokemonInventory(trainer.id)
@@ -127,173 +122,7 @@ function App() {
     }
   }, [pyodideInstance])
 
-  // Database functions for Trainer/Pokemon system
-  
-  // Create or get trainer
-  async function createOrGetTrainer(name: string) {
-    const { data: { user }, error: userErr } = await supabase.auth.getUser()
-    if (userErr || !user) { 
-      console.error(userErr || 'No user')
-      return null
-    }
-
-    try {
-      // First check if trainer exists
-      const { data: existingTrainer, error: _fetchError } = await supabase
-        .from('trainers')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('name', name)
-        .single()
-
-      if (existingTrainer) {
-        setCurrentTrainer(existingTrainer)
-        setTrainerName(existingTrainer.name)
-        await loadTrainerInventory(existingTrainer.id)
-        
-        // Send trainer data to Godot game
-        sendTrainerToGame(existingTrainer.name)
-        
-        return existingTrainer
-      }
-
-      // Create new trainer if doesn't exist
-      const { data: newTrainer, error: createError } = await supabase
-        .from('trainers')
-        .insert([
-          { 
-            user_id: user.id, 
-            name: name,
-            total_points: 0,
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single()
-
-      if (createError) {
-        console.error('Error creating trainer:', createError)
-        return null
-      }
-
-      setCurrentTrainer(newTrainer)
-      setTrainerName(newTrainer.name)
-      setTotalPoints(0)
-      setPokemonInventory([])
-      
-      // Send trainer data to Godot game
-      sendTrainerToGame(newTrainer.name)
-      
-      return newTrainer
-    } catch (error) {
-      console.error('Error in createOrGetTrainer:', error)
-      return null
-    }
-  }
-
-  // Load trainer's Pokemon inventory
-  async function loadTrainerInventory(trainerId: string) {
-    try {
-      const { data: inventory, error } = await supabase
-        .from('pokemon_inventory')
-        .select('*')
-        .eq('trainer_id', trainerId)
-        .order('captured_at', { ascending: false })
-
-      if (error) {
-        console.error('Error loading inventory:', error)
-        return
-      }
-
-      setPokemonInventory(inventory || [])
-      
-      // Calculate total points
-      const points = inventory?.reduce((sum, pokemon) => sum + pokemon.points, 0) || 0
-      setTotalPoints(points)
-    } catch (error) {
-      console.error('Error in loadTrainerInventory:', error)
-    }
-  }
-
-  // Add Pokemon to trainer's inventory
-  async function addPokemonToInventory(trainerId: string, pokemonData: {
-    name: string,
-    level: number,
-    points: number
-  }) {
-    try {
-      const { error } = await supabase
-        .from('pokemon_inventory')
-        .insert([
-          {
-            trainer_id: trainerId,
-            pokemon_name: pokemonData.name,
-            level: pokemonData.level,
-            points: pokemonData.points,
-            captured_at: new Date().toISOString()
-          }
-        ])
-        .select()
-
-      if (error) {
-        console.error('Error adding Pokemon:', error)
-        return false
-      }
-
-      // Update trainer's total points
-      const newPoints = totalPoints + pokemonData.points
-      await updateTrainerPoints(trainerId, newPoints)
-      
-      // Refresh inventory
-      await loadTrainerInventory(trainerId)
-      return true
-    } catch (error) {
-      console.error('Error in addPokemonToInventory:', error)
-      return false
-    }
-  }
-
-  // Update trainer's total points
-  async function updateTrainerPoints(trainerId: string, newPoints: number) {
-    try {
-      const { error } = await supabase
-        .from('trainers')
-        .update({ total_points: newPoints })
-        .eq('id', trainerId)
-
-      if (error) {
-        console.error('Error updating trainer points:', error)
-      }
-    } catch (error) {
-      console.error('Error in updateTrainerPoints:', error)
-    }
-  }
-
-  // Get all trainers (leaderboard)
-  async function loadAllTrainers() {
-    try {
-      const { data: trainers, error } = await supabase
-        .from('trainers')
-        .select(`
-          *,
-          pokemon_inventory(count)
-        `)
-        .order('total_points', { ascending: false })
-
-      if (error) {
-        console.error('Error loading trainers:', error)
-        return []
-      }
-
-      setAllTrainers(trainers || [])
-      return trainers || []
-    } catch (error) {
-      console.error('Error in loadAllTrainers:', error)
-      return []
-    }
-  }
-
-  // Initialize trainers when app loads
+  // Initialize app when it loads
   useEffect(() => {
     initializeApp()
   }, [])
@@ -566,10 +395,9 @@ function App() {
                 onClick={async () => {
                   const trainers = await loadCSVTrainers()
                   if (trainers.length > 0) {
-                    const trainer = trainers[0] // trainer1
+                    const trainer = trainers[0]
                     setCurrentTrainer(trainer)
                     currentTrainerRef.current = trainer
-                    setTrainerName(trainer.name)
                     const pokemonData = await loadCSVPokemonInventory(trainer.id)
                     sendTrainerToGame(trainer.name)
                     sendPokemonInventoryToGame(pokemonData)
@@ -593,10 +421,9 @@ function App() {
                 onClick={async () => {
                   const trainers = await loadCSVTrainers()
                   if (trainers.length > 1) {
-                    const trainer = trainers[1] // trainer2
+                    const trainer = trainers[1]
                     setCurrentTrainer(trainer)
                     currentTrainerRef.current = trainer
-                    setTrainerName(trainer.name)
                     const pokemonData = await loadCSVPokemonInventory(trainer.id)
                     sendTrainerToGame(trainer.name)
                     sendPokemonInventoryToGame(pokemonData)
@@ -647,47 +474,6 @@ function App() {
             </div>
           )}
           
-          {/* Database Trainer Creation (Optional) */}
-          {!currentTrainer ? (
-            <div style={{
-              padding: '10px',
-              backgroundColor: '#1a202c',
-              borderRadius: '4px',
-              border: '1px solid #4a5568',
-              marginTop: '15px'
-            }}>
-              <h4 style={{ color: '#ffffff', marginTop: 0 }}>Or Create Database Trainer:</h4>
-              <input
-                type="text"
-                placeholder="Enter trainer name"
-                value={trainerName}
-                onChange={(e) => setTrainerName(e.target.value)}
-                style={{
-                  padding: '8px',
-                  marginRight: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #4a5568',
-                  backgroundColor: '#2d3748',
-                  color: '#ffffff'
-                }}
-              />
-              <button 
-                onClick={() => createOrGetTrainer(trainerName)}
-                disabled={!trainerName.trim()}
-                style={{
-                  padding: '8px 15px',
-                  backgroundColor: '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Create/Load Trainer
-              </button>
-            </div>
-          ) : null}
-          
           {/* Pokemon Inventory Display */}
           {pokemonInventory.length > 0 && (
             <div style={{ marginTop: '15px' }}>
@@ -708,104 +494,6 @@ function App() {
               </div>
             </div>
           )}
-          
-          {/* Action Buttons for Database Trainers */}
-          {currentTrainer && currentTrainer.user_id && (
-            <div style={{ marginTop: '15px' }}>
-              <button 
-                onClick={() => {
-                  const pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX"]
-                  const randomLevel = Math.floor(Math.random() * 3) + 1
-                  const testPokemon = {
-                    name: pokemon_pool[Math.floor(Math.random() * pokemon_pool.length)],
-                    level: randomLevel,
-                    points: randomLevel * 100
-                  }
-                  addPokemonToInventory(currentTrainer.id, testPokemon)
-                }}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginRight: '10px'
-                }}
-              >
-                Add Test Pokémon
-              </button>
-              
-              <button 
-                onClick={() => {
-                  setCurrentTrainer(null)
-                  setTrainerName('')
-                  setPokemonInventory([])
-                  setTotalPoints(0)
-                }}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginRight: '10px'
-                }}
-              >
-                Switch Trainer
-              </button>
-              
-              <button 
-                onClick={() => {
-                  if (currentTrainer) {
-                    sendTrainerToGame(currentTrainer.name)
-                    setOutput(`Sent trainer "${currentTrainer.name}" to game`)
-                  }
-                }}
-                style={{
-                  padding: '5px 10px',
-                  backgroundColor: '#9C27B0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Test Send to Game
-              </button>
-            </div>
-          )}
-          
-          {/* Leaderboard */}
-          <div style={{ marginTop: '15px' }}>
-            <button 
-              onClick={loadAllTrainers}
-              style={{
-                padding: '5px 10px',
-                backgroundColor: '#FF9800',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Load Leaderboard
-            </button>
-            
-            {allTrainers.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <h5 style={{ color: '#ffffff' }}>Top Trainers:</h5>
-                <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '11px' }}>
-                  {allTrainers.slice(0, 5).map((trainer, index) => (
-                    <div key={trainer.id} style={{ padding: '2px 0', color: '#a0aec0' }}>
-                      {index + 1}. {trainer.name} - {trainer.total_points} pts
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -860,59 +548,6 @@ function App() {
           <pre className="python-output-compact">
             {output}
           </pre>
-          
-          {/* CSV to Game Integration */}
-          <div style={{marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #ddd'}}>
-            <h4 style={{marginBottom: '10px'}}>Load Pokemon from CSV</h4>
-            <button onClick={async () => {
-              try {
-                // Load CSV data from public folder
-                const csvPath = '/PokePoP/test_pokemon_inventory.csv'
-                const response = await fetch(csvPath)
-                
-                if (!response.ok) {
-                  throw new Error(`Failed to load CSV: ${response.status}`)
-                }
-                
-                const csvText = await response.text()
-                const allPokemon = parseCSV(csvText)
-                
-                // Format data for Godot GameManager
-                const formattedPokemon = allPokemon.map(pokemon => ({
-                  pokemon_name: pokemon.pokemon_name,
-                  level: parseInt(pokemon.level) || 1,
-                  points: parseInt(pokemon.points) || 100,
-                  captured_at: pokemon.captured_at || new Date().toISOString()
-                }))
-                
-                // Send to game via postMessage
-                const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
-                if (gameFrame && gameFrame.contentWindow) {
-                  gameFrame.contentWindow.postMessage({
-                    type: 'POKEMON_INVENTORY_UPDATE',
-                    pokemon_data: formattedPokemon
-                  }, '*')
-                  setOutput(`✅ Loaded ${formattedPokemon.length} Pokemon from CSV and sent to game!`)
-                } else {
-                  setOutput('❌ Game frame not found')
-                }
-              } catch (error) {
-                console.error('Error loading CSV:', error)
-                setOutput(`❌ Error: ${error instanceof Error ? error.message : String(error)}`)
-              }
-            }} style={{
-              padding: '10px 20px',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}>
-              📂 Send CSV to Game
-            </button>
-          </div>
         </div>
       </div>
     </div>
