@@ -514,7 +514,7 @@ function App() {
             fontSize: '12px',
             fontWeight: 'bold'
           }}>
-            {gameStatus === 'battle' ? 'IN BATTLE' : 'MENU/OVERWORLD'}
+            {gameStatus === 'battle' ? 'IN BATTLE' : 'OVERWORLD'}
           </div>
           
           <textarea
@@ -542,7 +542,7 @@ function App() {
 
 
           <button onClick={runPythonCode} className="run-button-compact">
-            ▶️ Run
+            ▶️ Evaluate Code
           </button>
 
           <pre className="python-output-compact">

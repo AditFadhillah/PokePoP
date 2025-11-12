@@ -23,9 +23,20 @@ var is_menu_visible = false
 var begin_battle = false
 var capture_in_progress = false  # Flag to prevent input during capture
 
-# Random Pokemon encounter system
-var pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
+# Region-based Pokemon pools
+var pokemon_pools = {
+	"Forest": ["RATTATA", "CATERPIE", "EEVEE", "VULPIX", "BULBASAUR", "PIDGEY"],
+	"Beach": ["SQUIRTLE", "HORSEA", "MEOWTH", "KRABBY", "SEEL", "MAGIKARP"],
+	"Volcano": ["CHARMANDER", "DIGLETT", "CUBONE", "RHYHORN", "PONYTA", "GEODUDE"],
+	"Swamp": ["GRIMER", "GASTLY", "ODDISH", "ZUBAT", "VENONAT", "EKANS"]
+}
+
+# Rare Pokemon that can appear in any region (low probability)
+var rare_pokemon = ["VAPOREON", "JOLTEON", "FLAREON", "DITTO", "MEW", "PIKACHU_CATCH"]
+var rare_probability = 0.05  # 5% chance for rare Pokemon
+
 var current_pokemon = ""
+var current_region = ""
 
 func _ready():
 	SignalManager.connect("btn_pos", move_menu_arrow)
@@ -34,8 +45,8 @@ func _ready():
 	SignalManager.connect("enemy_dead", on_enemy_dead)
 	SignalManager.connect("player_dead", on_player_dead)
 	
-	# Select random Pokemon for this battle
-	current_pokemon = pokemon_pool[randi() % pokemon_pool.size()]
+	# Select Pokemon based on region (will be set by set_region before _ready)
+	select_pokemon_for_region()
 
 	# Generate random level (1-3 for variety)
 	var random_level = randi_range(1, 3)
@@ -50,6 +61,29 @@ func _ready():
 	dialog_box.visible = true
 	dialog.visible = false	
 	$BattleMusic.play()
+
+func set_region(region: String):
+	# Called by player.gd before adding to scene tree
+	current_region = region
+	print("Battle region set to: ", region)
+
+func select_pokemon_for_region():
+	# Check for rare Pokemon first (5% chance)
+	if randf() < rare_probability:
+		current_pokemon = rare_pokemon[randi() % rare_pokemon.size()]
+		print("Rare Pokemon encountered: ", current_pokemon)
+		return
+	
+	# Get Pokemon pool for the current region
+	if pokemon_pools.has(current_region):
+		var region_pool = pokemon_pools[current_region]
+		current_pokemon = region_pool[randi() % region_pool.size()]
+		print("Region Pokemon encountered in ", current_region, ": ", current_pokemon)
+	else:
+		# Fallback to Forest if region not found
+		print("Warning: Unknown region '", current_region, "', using Forest")
+		var forest_pool = pokemon_pools["Forest"]
+		current_pokemon = forest_pool[randi() % forest_pool.size()]
 
 func _process(_delta):
 	click_to_continue.visible = is_dialog_finished
