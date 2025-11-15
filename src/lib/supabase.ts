@@ -45,12 +45,25 @@ export const dbHelpers = {
   // Get all trainers for current user
   async getUserTrainers() {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { data: null, error: 'No user' }
+    if (!user) {
+      // If no user is authenticated, return all trainers (for development/testing)
+      return this.getAllTrainers()
+    }
 
     const { data, error } = await supabase
       .from('trainers')
       .select('*')
       .eq('user_id', user.id)
+      .order('total_points', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Get all trainers (regardless of user - for development/testing)
+  async getAllTrainers() {
+    const { data, error } = await supabase
+      .from('trainers')
+      .select('*')
       .order('total_points', { ascending: false })
 
     return { data, error }
@@ -73,6 +86,26 @@ export const dbHelpers = {
       .select('*')
       .eq('trainer_id', trainerId)
       .order('captured_at', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Create a new trainer
+  async createTrainer(name: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { data: null, error: 'No user' }
+
+    const { data, error } = await supabase
+      .from('trainers')
+      .insert([
+        {
+          user_id: user.id,
+          name: name,
+          total_points: 0
+        }
+      ])
+      .select()
+      .single()
 
     return { data, error }
   }
