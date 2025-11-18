@@ -28,6 +28,7 @@ var battle_timer = 100.0  # 10 seconds
 var time_remaining = 100.0
 var timer_active = false
 var timer_label: Label
+var battle_start_time: int = 0  # Track when battle started (in milliseconds)
 
 # Region-based Pokemon pools
 var pokemon_pools = {
@@ -169,6 +170,7 @@ func start_battle_timer():
 	# Start the countdown timer (hidden from player for added suspense)
 	time_remaining = battle_timer
 	timer_active = true
+	battle_start_time = Time.get_ticks_msec()  # Record start time in milliseconds
 	
 	print("⏰ Battle Timer Started: ", battle_timer, " seconds")
 	
@@ -231,10 +233,12 @@ func _trigger_capture():
 	is_menu_visible = false
 	capture_in_progress = true  # Prevent input during capture
 	
-	# Stop the timer
+	# Stop the timer and calculate capture duration
 	timer_active = false
+	var capture_time_ms = Time.get_ticks_msec() - battle_start_time
 	
 	print("✅ Pokemon captured with ", ceil(time_remaining), " seconds remaining!")
+	print("⏱️ Capture Time: ", capture_time_ms, "ms (", capture_time_ms / 1000.0, " seconds)")
 	
 	# Calculate points based on level
 	var enemy_level = enemy.current_pokemon_level
@@ -262,6 +266,7 @@ func _trigger_capture():
 			"base_points": base_points,
 			"time_bonus": time_bonus,
 			"time_percentage": int(time_percentage),
+			"capture_time_ms": capture_time_ms,
 			"captured_at": Time.get_datetime_string_from_system()
 		})
 	

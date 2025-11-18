@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "timer and triner setup to DB"
+git commit -m "Leaderboard + better logo and layout"
 git push origin main
 
 npm run build

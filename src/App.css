@@ -30,6 +30,11 @@ html, body {
   background-color: #000000;
 }
 
+.app-container.with-user-bar {
+  padding-top: calc(48px + 0.25rem);
+  height: 100vh;
+}
+
 .left-panel {
   flex: 1;
   display: flex;
@@ -84,6 +89,75 @@ html, body {
   margin-top: 0;
   color: #ffffff;
   font-size: 1em;
+}
+
+/* Leaderboard Section */
+.leaderboard-section {
+  background-color: #2d3748;
+  padding: 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: #ffffff;
+  font-size: 0.95em;
+  text-align: center;
+}
+
+.leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+}
+
+.leaderboard-item {
+  background-color: #1a202c;
+  padding: 0.35rem 0.4rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #4a5568;
+  transition: border-color 0.2s;
+}
+
+.leaderboard-item:hover {
+  border-color: #63b3ed;
+}
+
+.leaderboard-rank {
+  font-size: 1em;
+  font-weight: bold;
+  color: #fbbf24;
+  min-width: 1.5rem;
+}
+
+.leaderboard-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.leaderboard-name {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 0.8em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-points {
+  color: #9ca3af;
+  font-size: 0.75em;
 }
 
 .right-panel {
@@ -178,6 +252,11 @@ html, body {
   align-items: center;
   z-index: 1000;
   border-bottom: 2px solid #4a5568;
+}
+
+.trainer-username {
+  font-size: 1.2em;
+  font-weight: bold;
 }
 
 .logout-button {

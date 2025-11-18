@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Ultra Ball (Blue Variant)</title>
+  <defs>
+    <radialGradient id="gloss" cx="35%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.0"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f2f2f2"/>
+      <stop offset="100%" stop-color="#d9d9d9"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3776ab"/>
+      <stop offset="100%" stop-color="#1d4e89"/>
+    </linearGradient>
+    <linearGradient id="yellowGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd84d"/>
+      <stop offset="100%" stop-color="#f2b705"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="240" fill="#111" stroke="#000" stroke-width="6"/>
+  <circle cx="256" cy="256" r="228" fill="#fff"/>
+
+  <!-- Top half (Python blue gradient) -->
+  <path d="M28,256 a228,228 0 1,1 456,0" fill="url(#blueGrad)"/>
+
+  <!-- Yellow accents -->
+  <path d="M120,150
+           c40,-35 120,-50 136,-50
+           v50
+           c-60,0 -100,10 -130,30
+           z" fill="url(#yellowGrad)"/>
+  <path d="M392,150
+           c-40,-35 -120,-50 -136,-50
+           v50
+           c60,0 100,10 130,30
+           z" fill="url(#yellowGrad)"/>
+  <path d="M128,120
+           a180,140 0 0,1 256,0
+           l-20,24
+           a160,120 0 0,0 -216,0
+           z" fill="url(#yellowGrad)" opacity="0.9"/>
+
+  <!-- Center band -->
+  <rect x="28" y="236" width="456" height="40" fill="#222"/>
+  <rect x="28" y="244" width="456" height="24" fill="#000" opacity="0.4"/>
+
+  <!-- Button bezel -->
+  <circle cx="256" cy="256" r="64" fill="#222" stroke="#000" stroke-width="4"/>
+  <circle cx="256" cy="256" r="56" fill="url(#metal)" stroke="#888" stroke-width="3"/>
+  <circle cx="256" cy="256" r="28" fill="#ffffff" stroke="#bfbfbf" stroke-width="3"/>
+  <circle cx="256" cy="252" r="18" fill="url(#gloss)"/>
+
+  <!-- Global gloss -->
+  <circle cx="200" cy="160" r="140" fill="url(#gloss)" opacity="0.6"/>
+
+  <!-- Shadow -->
+  <ellipse cx="256" cy="420" rx="160" ry="24" fill="#000" opacity="0.12"/>
+</svg>

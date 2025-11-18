@@ -23,6 +23,18 @@ export interface PokemonInventory {
   level: number
   points: number
   captured_at: string
+  capture_time_ms?: number | null  // Time taken to capture in milliseconds
+}
+
+export interface UsageSession {
+  id: string
+  username: string
+  meta: any // JSON object for storing session metadata
+  started_at: string
+  last_beat_at: string
+  ended_at: string | null
+  active_ms: number
+  created_at: string
 }
 
 // Helper functions for database operations
@@ -108,6 +120,106 @@ export const dbHelpers = {
       .single()
 
     return { data, error }
+  },
+
+  // Usage Session Management
+  
+  // Create a new usage session
+  async createUsageSession(username: string, metadata: any = {}) {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .insert([
+        {
+          username: username,
+          meta: metadata,
+          started_at: new Date().toISOString(),
+          last_beat_at: new Date().toISOString(),
+          active_ms: 0
+        }
+      ])
+      .select()
+      .single()
+
+    return { data, error }
+  },
+
+  // Update session heartbeat (call periodically while user is active)
+  async updateSessionHeartbeat(sessionId: string, activeMs: number) {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .update({
+        last_beat_at: new Date().toISOString(),
+        active_ms: activeMs
+      })
+      .eq('id', sessionId)
+      .select()
+      .single()
+
+    return { data, error }
+  },
+
+  // End a usage session
+  async endUsageSession(sessionId: string, activeMs: number) {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .update({
+        ended_at: new Date().toISOString(),
+        last_beat_at: new Date().toISOString(),
+        active_ms: activeMs
+      })
+      .eq('id', sessionId)
+      .select()
+      .single()
+
+    return { data, error }
+  },
+
+  // Get all sessions for a user
+  async getUserSessions(username: string) {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .select('*')
+      .eq('username', username)
+      .order('started_at', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Get active sessions (not ended yet)
+  async getActiveSessions() {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .select('*')
+      .is('ended_at', null)
+      .order('started_at', { ascending: false })
+
+    return { data, error }
+  },
+
+  // Get session statistics for a user
+  async getUserSessionStats(username: string) {
+    const { data, error } = await supabase
+      .from('usage_sessions')
+      .select('active_ms, started_at, ended_at')
+      .eq('username', username)
+
+    if (error) return { data: null, error }
+
+    // Calculate statistics
+    const totalSessions = data.length
+    const totalActiveMs = data.reduce((sum, session) => sum + (session.active_ms || 0), 0)
+    const averageSessionMs = totalSessions > 0 ? totalActiveMs / totalSessions : 0
+
+    return {
+      data: {
+        totalSessions,
+        totalActiveMs,
+        averageSessionMs,
+        totalActiveMinutes: Math.floor(totalActiveMs / 60000),
+        averageSessionMinutes: Math.floor(averageSessionMs / 60000)
+      },
+      error: null
+    }
   }
 }
 

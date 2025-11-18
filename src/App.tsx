@@ -3,6 +3,7 @@ import './App.css'
 import { usePyodide } from './lib/usepyodide'
 import { supabase, dbHelpers } from './lib/supabase'
 import { supabase as supabaseAuth } from './lib/databaseFunctions'
+import { useUsageSession } from './lib/useUsageSession'
 
 // Import neurogen login views and components
 import WelcomeView from './views/welcomeView'
@@ -56,6 +57,19 @@ print("Ready to start your adventure!")`)
   const [isTaskActive, setIsTaskActive] = useState(false)
   const [currentBattlePokemon, setCurrentBattlePokemon] = useState<any>(null)
   const taskCompletionSentRef = useRef(false)
+
+  // Leaderboard State
+  const [leaderboard, setLeaderboard] = useState<any[]>([])
+
+  // Usage Session Tracking
+  const usageSession = useUsageSession(
+    currentAppUser?.username || null,
+    {
+      appView: appView,
+      gameStatus: gameStatus,
+      trainer: currentTrainer?.name
+    }
+  )
 
   // Supabase Database Functions
   
@@ -124,6 +138,57 @@ print("Ready to start your adventure!")`)
       return trainer
     }
     return null
+  }
+
+  // Load leaderboard from database
+  async function loadLeaderboard() {
+    try {
+      console.log('Loading leaderboard...')
+      
+      // Try querying the view
+      const { data, error } = await supabase
+        .from('trainer_leaderboard')
+        .select('*')
+        .order('total_points', { ascending: false })
+        .limit(6)
+      
+      console.log('Leaderboard data:', data)
+      console.log('Leaderboard error:', error)
+      
+      if (error) {
+        console.error('Error loading leaderboard:', error)
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        
+        // If view fails, try direct query from trainers table as fallback
+        console.log('Falling back to direct trainers query...')
+        const { data: trainersData, error: trainersError } = await supabase
+          .from('trainers')
+          .select('id, name, total_points, created_at, user_id')
+          .order('total_points', { ascending: false })
+          .limit(6)
+        
+        if (trainersError) {
+          console.error('Fallback query also failed:', trainersError)
+          return []
+        }
+        
+        setLeaderboard(trainersData || [])
+        console.log('Leaderboard set from fallback:', trainersData)
+        return trainersData || []
+      }
+      
+      setLeaderboard(data || [])
+      console.log('Leaderboard set to:', data)
+      return data || []
+    } catch (error) {
+      console.error('Error loading leaderboard:', error)
+      return []
+    }
   } 
   const pyodideInstance = usePyodide()
   useEffect(() => {
@@ -153,13 +218,13 @@ print("Ready to start your adventure!")`)
   }, [])
 
   async function initializeApp() {
-    // Check for logged-in app user first
-    const { data: { user } } = await supabase.auth.getUser()
-    
     // For now, just load trainers without forcing authentication
     // The login system is available but not required
     const trainers = await loadTrainers()
     setAllTrainers(trainers)
+    
+    // Load leaderboard
+    await loadLeaderboard()
     
     if (trainers.length > 0) {
       setOutput(`🎮 Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
@@ -332,10 +397,10 @@ print("Ready to start your adventure!")`)
           sendTrainerToGame(trainer.name)
           sendPokemonInventoryToGame(pokemonData)
           
-          setOutput(`✅ Game started! Trainer ${trainer.name} loaded with ${pokemonData.length} Pokemon.`)
+          setOutput(`Game started! Trainer ${trainer.name} loaded with ${pokemonData.length} Pokemon.`)
         } else {
           console.error('No trainer found! currentTrainer:', currentTrainer, 'currentTrainerRef:', currentTrainerRef.current)
-          setOutput('❌ No trainer selected. Please select a trainer first.')
+          setOutput('No trainer selected. Please select a trainer first.')
         }
       }, 500)
     } else if (data.type === 'request_current_trainer') {
@@ -376,13 +441,15 @@ print("Ready to start your adventure!")`)
       name: captureData.data?.pokemon_name || captureData.pokemon_name || 'Unknown',
       level: captureData.data?.level || captureData.level || 1,
       points: captureData.data?.points || captureData.points || 100,
-      captured_at: captureData.data?.captured_at || captureData.captured_at || new Date().toISOString()
+      captured_at: captureData.data?.captured_at || captureData.captured_at || new Date().toISOString(),
+      capture_time_ms: captureData.data?.capture_time_ms || captureData.capture_time_ms || null
     }
 
     // Extract time bonus info if available
     const basePoints = captureData.data?.base_points || null
     const timeBonus = captureData.data?.time_bonus || null
     const timePercentage = captureData.data?.time_percentage || null
+    const captureTimeSeconds = pokemonData.capture_time_ms ? (pokemonData.capture_time_ms / 1000).toFixed(2) : null
 
     // Add to database using trainer from ref/state
     const success = await addPokemonToDatabase(trainer.id, pokemonData)
@@ -390,6 +457,10 @@ print("Ready to start your adventure!")`)
     if (success) {
       // Create detailed output message with time bonus info
       let outputMessage = `${pokemonData.name} (Lv.${pokemonData.level}) captured and saved to database!\n\n`
+      
+      if (captureTimeSeconds) {
+        outputMessage += `⏱️ Solve Time: ${captureTimeSeconds}s\n`
+      }
       
       if (basePoints !== null && timeBonus !== null && timePercentage !== null) {
         outputMessage += `💰 Base Points: ${basePoints}\n`
@@ -407,6 +478,9 @@ print("Ready to start your adventure!")`)
       // Send updated inventory to game
       const updatedInventory = await loadPokemonInventory(trainer.id)
       sendPokemonInventoryToGame(updatedInventory)
+      
+      // Refresh leaderboard after capture
+      await loadLeaderboard()
     } else {
       setOutput(`${pokemonData.name} captured in game, but failed to save to database. Check console for details. (Hint: You may need to disable RLS in Supabase)`)
     }
@@ -417,7 +491,8 @@ print("Ready to start your adventure!")`)
     name: string,
     level: number,
     points: number,
-    captured_at: string
+    captured_at: string,
+    capture_time_ms?: number | null
   }) {
     try {
       console.log('Attempting to add Pokemon to database:', { trainerId, pokemonData })
@@ -431,7 +506,8 @@ print("Ready to start your adventure!")`)
             pokemon_name: pokemonData.name,
             level: pokemonData.level,
             points: pokemonData.points,
-            captured_at: pokemonData.captured_at
+            captured_at: pokemonData.captured_at,
+            capture_time_ms: pokemonData.capture_time_ms
           }
         ])
         .select()
@@ -501,7 +577,7 @@ print("Ready to start your adventure!")`)
         console.log('Task loaded:', task)
         setCurrentTask(task)
         setCode(task.starter_code || '')
-        setOutput(`📝 Task: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
+        setOutput(`Task: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
       } else {
         console.warn('No tasks found in database')
         setOutput('❌ No tasks available in database. Please run the migration script.')
@@ -701,7 +777,11 @@ print("Ready to start your adventure!")`)
           // Don't send trainer yet - wait for GAME_STARTED signal from Godot
           setOutput('Game loading... Press ENTER to start.')
         }}
-        onLogout={() => {
+        onLogout={async () => {
+          // End usage session before logout
+          if (usageSession.sessionActive) {
+            await usageSession.endSession()
+          }
           setCurrentAppUser(null)
           setCurrentTrainer(null)
           setAppView('welcome')
@@ -713,13 +793,17 @@ print("Ready to start your adventure!")`)
 
   // Main game view (the existing game UI)
   return (
-    <div className="app-container">
+    <div className={`app-container ${currentAppUser ? 'with-user-bar' : ''}`}>
       {/* User Info Bar */}
       {currentAppUser && (
         <div className="user-info-bar">
-          <span>👤 {currentAppUser.username}</span>
+          <span className="trainer-username">Trainer: {currentAppUser.username}</span>
           <button
-            onClick={() => {
+            onClick={async () => {
+              // End usage session before logout
+              if (usageSession.sessionActive) {
+                await usageSession.endSession()
+              }
               setCurrentAppUser(null)
               setCurrentTrainer(null)
               setAppView('welcome')
@@ -732,10 +816,10 @@ print("Ready to start your adventure!")`)
       )}
 
       {/* Left Side - Game Only */}
-      <div className={`left-panel ${currentAppUser ? 'left-panel-with-user' : 'left-panel-no-user'}`}>
+      <div className="left-panel">
         {/* Game Section */}
         <div className="game-section">
-          <h3>Creature Collector</h3>
+          <h3>PyMon - Creature Collector</h3>
           <iframe 
             src="/PokePoP/game/web/Pokemon_Clone.html"
             width="100%"
@@ -748,6 +832,28 @@ print("Ready to start your adventure!")`)
             }}
             // allow="fullscreen"
           />
+        </div>
+
+        {/* Leaderboard Section */}
+        <div className="leaderboard-section">
+          <h3>🏆 Top Trainers</h3>
+          {leaderboard.length > 0 ? (
+            <div className="leaderboard-grid">
+              {leaderboard.map((trainer, index) => (
+                <div key={trainer.id} className="leaderboard-item">
+                  <span className="leaderboard-rank">#{index + 1}</span>
+                  <div className="leaderboard-info">
+                    <span className="leaderboard-name">{trainer.name}</span>
+                    <span className="leaderboard-points">⭐ {trainer.total_points}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: '#9ca3af', textAlign: 'center', padding: '1rem' }}>
+              No trainers found. Start capturing Pokemon!
+            </div>
+          )}
         </div>
       </div>
 
