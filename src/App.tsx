@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { usePyodide } from './lib/usepyodide'
 import { supabase, dbHelpers } from './lib/supabase'
-import { supabase as supabaseAuth } from './lib/databaseFunctions'
+// import { supabase as supabaseAuth } from './lib/databaseFunctions'
 import { useUsageSession } from './lib/useUsageSession'
 
 // Import neurogen login views and components
@@ -34,9 +34,11 @@ print("Ready to start your adventure!")`)
   const [currentTrainer, setCurrentTrainer] = useState<any>(null)
   const currentTrainerRef = useRef<any>(null)
   const [pokemonInventory, setPokemonInventory] = useState<any[]>([])
-  const [totalPoints, setTotalPoints] = useState(0)
-  const [allTrainers, setAllTrainers] = useState<any[]>([])
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  // const [totalPoints, setTotalPoints] = useState(0)
+  const [, setTotalPoints] = useState(0)
+  const [, setAllTrainers] = useState<any[]>([])
+  // const [allTrainers, setAllTrainers] = useState<any[]>([])
+  // const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // App-level user (username/password stored in app_users table)
   const [currentAppUser, setCurrentAppUser] = useState<any>(null)
@@ -53,9 +55,11 @@ print("Ready to start your adventure!")`)
 
   // Programming Task States
   const [currentTask, setCurrentTask] = useState<any>(null)
-  const [taskOutput, setTaskOutput] = useState<string>('')
+  // const [taskOutput, setTaskOutput] = useState<string>('')
+  const [, setTaskOutput] = useState<string>('')
   const [isTaskActive, setIsTaskActive] = useState(false)
-  const [currentBattlePokemon, setCurrentBattlePokemon] = useState<any>(null)
+  // const [currentBattlePokemon, setCurrentBattlePokemon] = useState<any>(null)
+  const [, setCurrentBattlePokemon] = useState<any>(null)
   const taskCompletionSentRef = useRef(false)
 
   // Leaderboard State
