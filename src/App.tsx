@@ -2,12 +2,30 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import { usePyodide } from './lib/usepyodide'
 import { supabase, dbHelpers } from './lib/supabase'
-import { Auth } from './components/Auth'
+import { supabase as supabaseAuth } from './lib/databaseFunctions'
+
+// Import neurogen login views and components
+import WelcomeView from './views/welcomeView'
+import SignupView from './views/signupView'
+import DashboardView from './views/dashboardView'
+import LoginModal from './components/loginmodal'
 
 function App() {
   // Python Editor States
   const [pyodide, setPyodide] = useState<any>(null)
-  const [code, setCode] = useState(`print("CATERPIE")\n# Try any Pokemon: BULBASAUR, CATERPIE, EEVEE, PIDGEY, VULPIX, RATTATA`)
+  const [code, setCode] = useState(`# PyMon Creature Collector
+# 
+# HOW TO PLAY:
+# 1. Move around the map using ARROW KEYS or WASD
+# 2. Walk through unique grass to encounter Pokemon
+# 3. When a battle starts, solve the Python programming task
+# 4. Click "Evaluate Code" to check your solution
+# 5. If correct, you capture the Pokemon!
+# 6. Collect all Pokemon and become the ultimate trainer!
+#
+# Press ENTER in the game to start exploring!
+
+print("Ready to start your adventure!")`)
   const [output, setOutput] = useState('')
   const [gameStatus, setGameStatus] = useState('menu') // 'menu', 'battle', 'unknown'
 
@@ -19,12 +37,39 @@ function App() {
   const [allTrainers, setAllTrainers] = useState<any[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // App-level user (username/password stored in app_users table)
+  const [currentAppUser, setCurrentAppUser] = useState<any>(null)
+
+  // Login modal + auth fields (username-based)
+  const [showLogin, setShowLogin] = useState(false)
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [authMessage, setAuthMessage] = useState<string | null>(null)
+  const [authBusy, setAuthBusy] = useState(false)
+
+  // Simple app view flow: 'welcome' -> 'dashboard' -> 'main'
+  const [appView, setAppView] = useState<'welcome' | 'dashboard' | 'main' | 'signup'>('welcome')
+
+  // Programming Task States
+  const [currentTask, setCurrentTask] = useState<any>(null)
+  const [taskOutput, setTaskOutput] = useState<string>('')
+  const [isTaskActive, setIsTaskActive] = useState(false)
+  const [currentBattlePokemon, setCurrentBattlePokemon] = useState<any>(null)
+  const taskCompletionSentRef = useRef(false)
+
   // Supabase Database Functions
   
   // Load all trainers from database
-  async function loadTrainers() {
+  async function loadTrainers(userId?: string) {
     try {
-      const { data, error } = await dbHelpers.getUserTrainers()
+      let query = supabase.from('trainers').select('*')
+      
+      // If userId is provided, filter by user_id
+      if (userId) {
+        query = query.eq('user_id', userId)
+      }
+      
+      const { data, error } = await query
       
       if (error) {
         console.error('Error loading trainers:', error)
@@ -108,45 +153,191 @@ function App() {
   }, [])
 
   async function initializeApp() {
-    // Check authentication status
+    // Check for logged-in app user first
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (user) {
-      setIsAuthenticated(true)
-      // Load trainers for this user
-      const trainers = await loadTrainers()
-      setAllTrainers(trainers)
-      
-      if (trainers.length > 0) {
-        setOutput(`✅ Connected to database. Found ${trainers.length} trainer(s). Select one to start!`)
-      } else {
-        setOutput('⚠️ No trainers found. You may need to create trainers in your database.')
-      }
+    // For now, just load trainers without forcing authentication
+    // The login system is available but not required
+    const trainers = await loadTrainers()
+    setAllTrainers(trainers)
+    
+    if (trainers.length > 0) {
+      setOutput(`🎮 Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
     } else {
-      setIsAuthenticated(false)
-      // Load all trainers (development mode - not authenticated)
-      const trainers = await loadTrainers()
-      setAllTrainers(trainers)
-      
-      if (trainers.length > 0) {
-        setOutput(`🔓 Development Mode: Found ${trainers.length} trainer(s) in database. Select one to start!`)
-      } else {
-        setOutput('⚠️ No trainers found in database. Please run the migration script.')
-      }
+      setOutput('⚠️ No trainers found in database.')
     }
   }
+
+  // ===== Login/Signup Functions =====
+  
+  async function handleLoginSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setAuthBusy(true)
+    setAuthMessage(null)
+
+    try {
+      // Query test_username table for username/password match
+      const { data, error } = await supabase
+        .from('test_username')
+        .select('*')
+        .eq('username', loginUsername)
+        .eq('password', loginPassword)
+        .single()
+
+      if (error || !data) {
+        setAuthMessage('❌ Invalid username or password')
+        setAuthBusy(false)
+        return
+      }
+
+      // Login successful
+      setCurrentAppUser(data)
+      setShowLogin(false)
+      setAuthMessage(null)
+      setLoginUsername('')
+      setLoginPassword('')
+      
+      // Load user's trainers and auto-select the first one
+      const userTrainers = await loadTrainers(data.id)
+      if (userTrainers.length > 0) {
+        const trainer = userTrainers[0]
+        setCurrentTrainer(trainer)
+        currentTrainerRef.current = trainer
+        const pokemonData = await loadPokemonInventory(trainer.id)
+        sendTrainerToGame(trainer.name)
+        sendPokemonInventoryToGame(pokemonData)
+        setOutput(`✅ Welcome back, ${data.username}! Trainer "${trainer.name}" selected with ${pokemonData.length} Pokemon.`)
+      } else {
+        setOutput(`✅ Welcome back, ${data.username}! No trainer found for your account.`)
+      }
+      
+      setAppView('dashboard')
+    } catch (err) {
+      setAuthMessage('❌ Login failed')
+    } finally {
+      setAuthBusy(false)
+    }
+  }
+
+  // async function handleSignupSubmit(username: string, password: string) {
+  //   setAuthBusy(true)
+  //   setAuthMessage(null)
+
+  //   try {
+  //     // Check if username exists
+  //     const { data: existing } = await supabase
+  //       .from('test_username')
+  //       .select('username')
+  //       .eq('username', username)
+  //       .single()
+
+  //     if (existing) {
+  //       setAuthMessage('❌ Username already taken')
+  //       setAuthBusy(false)
+  //       return false
+  //     }
+
+  //     // Create new user
+  //     const { data: newUser, error } = await supabase
+  //       .from('test_username')
+  //       .insert([{ username, password }])
+  //       .select()
+  //       .single()
+
+  //     if (error || !newUser) {
+  //       setAuthMessage('❌ Signup failed')
+  //       setAuthBusy(false)
+  //       return false
+  //     }
+
+  //     // Auto-login after signup
+  //     setCurrentAppUser(newUser)
+  //     setAppView('dashboard')
+  //     setOutput(`🎉 Account created! Welcome, ${newUser.username}!`)
+  //     return true
+  //   } catch (err) {
+  //     setAuthMessage('❌ Signup error')
+  //     return false
+  //   } finally {
+  //     setAuthBusy(false)
+  //   }
+  // }
 
   function handleGodotMessage(data: any) {
     if (data.type === 'BATTLE_STARTED') {
       setGameStatus('battle')
-      setCode('print("in battle")')
-      setOutput('Battle started! Code updated automatically.')
+      setCurrentBattlePokemon(data.data)
+      setIsTaskActive(true)
+      taskCompletionSentRef.current = false // Reset flag for new battle
+      loadRandomTask()
     } else if (data.type === 'BATTLE_ENDED') {
       setGameStatus('menu')
-      setCode(`print("Click Enter")`)
-      setOutput('Battle ended! Code restored.')
+      setIsTaskActive(false)
+      setCurrentTask(null)
+      setCurrentBattlePokemon(null)
+      taskCompletionSentRef.current = false // Reset flag
+      setCode(`# PyMon Creature Collector
+# 
+# HOW TO PLAY:
+# 1. Move around the map using ARROW KEYS or WASD
+# 2. Walk through unique grass to encounter Pokemon
+# 3. When a battle starts, solve the Python programming task
+# 4. Click "Evaluate Code" to check your solution
+# 5. If correct, you capture the Pokemon!
+# 6. Collect all Pokemon and become the ultimate trainer!
+#
+# Press ENTER in the game to start the game!
+
+print("Ready to start your adventure!")`)
+      setOutput('Battle ended! Ready for next encounter.')
+    } else if (data.type === 'POKEMON_FLED') {
+      // Pokemon fled due to time limit
+      setGameStatus('menu')
+      setIsTaskActive(false)
+      setCurrentTask(null)
+      setCurrentBattlePokemon(null)
+      taskCompletionSentRef.current = false
+      setCode(`# PyMon Creature Collector
+# 
+# HOW TO PLAY:
+# 1. Move around the map using ARROW KEYS or WASD
+# 2. Walk through unique grass to encounter Pokemon
+# 3. When a battle starts, solve the Python programming task
+# 4. Click "Evaluate Code" to check your solution
+# 5. If correct, you capture the Pokemon!
+# 6. Collect all Pokemon and become the ultimate trainer!
+#
+# Press ENTER in the game to start the game!
+
+print("Ready to start your adventure!")`)
+      setOutput(`💨 ${data.data?.pokemon_name || 'Pokemon'} fled! You ran out of time. Try to be faster next time!`)
     } else if (data.type === 'POKEMON_CAPTURED') {
       handlePokemonCapture(data)
+    } else if (data.type === 'ENTER_PRESSED_IN_GAME') {
+      console.log('Current trainer:', currentTrainer)
+      console.log('Current trainer ref:', currentTrainerRef.current)
+      setOutput('⏳ Game starting...')
+      
+      setTimeout(async () => {
+        // Use ref as it's more reliable than state
+        const trainer = currentTrainerRef.current || currentTrainer
+        
+        if (trainer) {
+          console.log('Sending trainer to game:', trainer.name)
+          
+          // Load the trainer's Pokemon inventory from database
+          const pokemonData = await loadPokemonInventory(trainer.id)
+          
+          // Send trainer and inventory to game
+          sendTrainerToGame(trainer.name)
+          sendPokemonInventoryToGame(pokemonData)
+          
+          setOutput(`✅ Game started! Trainer ${trainer.name} loaded with ${pokemonData.length} Pokemon.`)
+        } else {
+          console.error('No trainer found! currentTrainer:', currentTrainer, 'currentTrainerRef:', currentTrainerRef.current)
+          setOutput('❌ No trainer selected. Please select a trainer first.')
+        }
+      }, 500)
     } else if (data.type === 'request_current_trainer') {
       // Send current trainer to Godot, or load CSV data if no trainer exists
       if (currentTrainer) {
@@ -188,11 +379,27 @@ function App() {
       captured_at: captureData.data?.captured_at || captureData.captured_at || new Date().toISOString()
     }
 
+    // Extract time bonus info if available
+    const basePoints = captureData.data?.base_points || null
+    const timeBonus = captureData.data?.time_bonus || null
+    const timePercentage = captureData.data?.time_percentage || null
+
     // Add to database using trainer from ref/state
     const success = await addPokemonToDatabase(trainer.id, pokemonData)
     
     if (success) {
-      setOutput(`${pokemonData.name} (Lv.${pokemonData.level}) captured and saved to database! +${pokemonData.points} points`)
+      // Create detailed output message with time bonus info
+      let outputMessage = `${pokemonData.name} (Lv.${pokemonData.level}) captured and saved to database!\n\n`
+      
+      if (basePoints !== null && timeBonus !== null && timePercentage !== null) {
+        outputMessage += `💰 Base Points: ${basePoints}\n`
+        outputMessage += `⏱️ Time Bonus: +${timeBonus} (${timePercentage}% remaining)\n`
+        outputMessage += `✨ Total: ${pokemonData.points} points`
+      } else {
+        outputMessage += `+${pokemonData.points} points`
+      }
+      
+      setOutput(outputMessage)
       
       // Refresh the inventory display
       await loadPokemonInventory(trainer.id)
@@ -271,6 +478,77 @@ function App() {
     }
   }
 
+  // Load a random programming task from database
+  async function loadRandomTask() {
+    try {
+      console.log('Loading random task...')
+      const { data, error } = await supabase
+        .rpc('get_random_task')
+      
+      console.log('Task data:', data)
+      console.log('Task error:', error)
+      
+      if (error) {
+        console.error('Error loading task:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
+        setOutput(`❌ Failed to load programming task: ${error.message || 'Unknown error'}`)
+        setIsTaskActive(false)
+        return
+      }
+      
+      if (data && data.length > 0) {
+        const task = data[0]
+        console.log('Task loaded:', task)
+        setCurrentTask(task)
+        setCode(task.starter_code || '')
+        setOutput(`📝 Task: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
+      } else {
+        console.warn('No tasks found in database')
+        setOutput('❌ No tasks available in database. Please run the migration script.')
+        setIsTaskActive(false)
+      }
+    } catch (error: any) {
+      console.error('Error loading task:', error)
+      console.error('Error stack:', error.stack)
+      setOutput(`❌ Failed to load programming task: ${error.message || 'Unknown error'}`)
+      setIsTaskActive(false)
+    }
+  }
+
+  // Validate if the code output matches the expected output
+  function validateTaskOutput(userOutput: string, expectedOutput: string): boolean {
+    // Normalize outputs for comparison
+    const normalizeOutput = (output: string) => {
+      return output
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/'/g, '"') // Normalize quotes
+        .toLowerCase()
+    }
+    
+    const normalizedUserOutput = normalizeOutput(userOutput)
+    const normalizedExpectedOutput = normalizeOutput(expectedOutput)
+    
+    return normalizedUserOutput === normalizedExpectedOutput
+  }
+
+  // Send task completion result to game
+  function sendTaskCompletionToGame(completed: boolean) {
+    console.log('Sending task completion to game:', completed)
+    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+    if (gameFrame && gameFrame.contentWindow) {
+      const message = {
+        type: 'TASK_COMPLETED',
+        completed: completed,
+        task_id: currentTask?.id
+      }
+      console.log('Posting message to game:', message)
+      gameFrame.contentWindow.postMessage(message, '*')
+    } else {
+      console.error('Game frame not found or no contentWindow')
+    }
+  }
+
   async function runPythonCode() {
     if (!pyodide) return
 
@@ -284,50 +562,34 @@ function App() {
       await pyodide.runPythonAsync(code)
 
       const outputText = await pyodide.runPythonAsync("mystdout.getvalue()")
-      setOutput(outputText || 'No output')
       
-      // Check for any Pokemon names
-      const pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
-      const foundPokemon = pokemon_pool.find(pokemon => 
-        outputText && outputText.toUpperCase().includes(pokemon)
-      )
-      
-      // Check if output contains "Click Enter" and send signal to game
-      if (outputText && outputText.toLowerCase().includes('click enter')) {
-        sendEnterToGame()
-      }
-      
-      // Check if output contains any Pokemon name and send test Pokemon signal to game
-      if (foundPokemon) {
-        sendTestPokemonToGame(outputText.trim())
+      // If in battle with active task, validate the output
+      if (isTaskActive && currentTask) {
+        const isCorrect = validateTaskOutput(outputText, currentTask.expected_output)
+        
+        if (isCorrect) {
+          setOutput(`✅ Correct! Output: ${outputText}\n\n🎉 Task completed successfully!`)
+          setTaskOutput(outputText)
+          // Send success to game to trigger capture (only once)
+          if (!taskCompletionSentRef.current) {
+            taskCompletionSentRef.current = true
+            sendTaskCompletionToGame(true)
+          }
+        } else {
+          setOutput(`❌ Incorrect!\n\nYour output: ${outputText}\n\nExpected: ${currentTask.expected_output}\n\nTry again!`)
+          taskCompletionSentRef.current = false // Reset for retry
+          sendTaskCompletionToGame(false)
+        }
+      } else {
+        // Normal mode (no active task)
+        setOutput(outputText || 'No output')
+        
       }
     } catch (err: any) {
       setOutput('Error: ' + err.message)
-    }
-  }
-
-  function sendEnterToGame() {
-    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
-    
-    if (gameFrame && gameFrame.contentWindow) {
-      const message = {
-        type: 'PRESS_ENTER',
-        action: 'key_press',
-        key: 'enter'
+      if (isTaskActive) {
+        sendTaskCompletionToGame(false)
       }
-      gameFrame.contentWindow.postMessage(message, '*')
-    }
-  }
-
-  function sendTestPokemonToGame(pokemonText: string) {
-    const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
-    
-    if (gameFrame && gameFrame.contentWindow) {
-      const message = {
-        type: 'TEST_POKEMON',
-        pokemon_text: pokemonText
-      }
-      gameFrame.contentWindow.postMessage(message, '*')
     }
   }
 
@@ -351,13 +613,129 @@ function App() {
     }
   }
 
+  // ===== View Routing =====
+  
+  // Welcome view (login screen)
+  if (appView === 'welcome') {
+    return (
+      <div>
+        <WelcomeView onOpenLogin={() => setShowLogin(true)}>
+          <LoginModal
+            open={showLogin}
+            onClose={() => setShowLogin(false)}
+            authMessage={authMessage}
+            authBusy={authBusy}
+            loginUsername={loginUsername}
+            setLoginUsername={setLoginUsername}
+            loginPassword={loginPassword}
+            setLoginPassword={setLoginPassword}
+            onSubmit={handleLoginSubmit}
+            onSignupClick={() => {
+              setShowLogin(false)
+              setAppView('signup')
+            }}
+          />
+        </WelcomeView>
+        
+        {/* Play as Guest button */}
+        <div className="guest-login-container">
+          <button
+            onClick={() => {
+              setCurrentAppUser(null)
+              setAppView('main')
+              setOutput('🎮 Playing as guest')
+            }}
+            className="guest-login-button"
+          >
+            🚀 Skip Login - Play as Guest
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Signup view
+  if (appView === 'signup') {
+    return (
+      <SignupView
+        onBack={() => setAppView('welcome')}
+        onSuccess={async (username: string) => {
+          // Auto-login after signup
+          const { data } = await supabase
+            .from('test_username')
+            .select('*')
+            .eq('username', username)
+            .single()
+          
+          if (data) {
+            setCurrentAppUser(data)
+            
+            // Load user's trainer (should be the one just created)
+            const userTrainers = await loadTrainers(data.id)
+            if (userTrainers.length > 0) {
+              const trainer = userTrainers[0]
+              setCurrentTrainer(trainer)
+              currentTrainerRef.current = trainer
+              const pokemonData = await loadPokemonInventory(trainer.id)
+              sendTrainerToGame(trainer.name)
+              sendPokemonInventoryToGame(pokemonData)
+              setOutput(`🎉 Account created! Welcome, ${username}! Trainer "${trainer.name}" ready!`)
+            } else {
+              setOutput(`🎉 Account created! Welcome, ${username}!`)
+            }
+            
+            setAppView('dashboard')
+          }
+        }}
+      />
+    )
+  }
+
+  // Dashboard view (after login, before entering game)
+  if (appView === 'dashboard') {
+    return (
+      <DashboardView
+        username={currentAppUser?.username}
+        onEnterGame={() => {
+          setAppView('main')
+          // Don't send trainer yet - wait for GAME_STARTED signal from Godot
+          setOutput('Game loading... Press ENTER to start.')
+        }}
+        onLogout={() => {
+          setCurrentAppUser(null)
+          setCurrentTrainer(null)
+          setAppView('welcome')
+          setOutput('👋 Logged out')
+        }}
+      />
+    )
+  }
+
+  // Main game view (the existing game UI)
   return (
     <div className="app-container">
-      {/* Left Side - Game + Trainer Management */}
-      <div className="left-panel">
+      {/* User Info Bar */}
+      {currentAppUser && (
+        <div className="user-info-bar">
+          <span>👤 {currentAppUser.username}</span>
+          <button
+            onClick={() => {
+              setCurrentAppUser(null)
+              setCurrentTrainer(null)
+              setAppView('welcome')
+            }}
+            className="logout-button"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+
+      {/* Left Side - Game Only */}
+      <div className={`left-panel ${currentAppUser ? 'left-panel-with-user' : 'left-panel-no-user'}`}>
         {/* Game Section */}
         <div className="game-section">
-          <h3 style={{ color: '#ffffff', marginTop: 0 }}>Creature Collector</h3>
+          <h3>Creature Collector</h3>
           <iframe 
             src="/PokePoP/game/web/Pokemon_Clone.html"
             width="100%"
@@ -365,153 +743,11 @@ function App() {
             title="Pokemon Clone Game"
             className="game-frame"
             onLoad={() => {
-              // Wait for game initialization, then send current trainer
-              setTimeout(() => {
-                if (currentTrainer) {
-                  sendTrainerToGame(currentTrainer.name)
-                }
-              }, 2000)
+              console.log('Game iframe loaded, waiting for GAME_STARTED signal...')
+              setOutput('Press ENTER in game to start')
             }}
             // allow="fullscreen"
           />
-        </div>
-
-        {/* Trainer Management Section */}
-        <div className="trainer-section" style={{
-          padding: '15px',
-          backgroundColor: '#2d3748',
-          borderRadius: '8px',
-          border: '1px solid #4a5568'
-        }}>
-          <h3 style={{ color: '#ffffff', marginTop: 0 }}>Trainer Management (Database)</h3>
-          
-          {/* Optional: Add authentication UI */}
-          {/* Uncomment to enable sign in/sign up */}
-          {/* <Auth /> */}
-          
-          <div style={{
-            padding: '10px',
-            marginBottom: '15px',
-            backgroundColor: '#1a202c',
-            borderRadius: '4px',
-            border: '1px solid #4a5568',
-            color: '#63b3ed',
-            fontSize: '12px'
-          }}>
-            🎮 <strong>Select a trainer and start capturing Pokémon!</strong>
-          </div>
-          
-          {/* Trainer Selection Buttons */}
-          <div style={{ marginBottom: '15px' }}>
-            <h4 style={{ color: '#ffffff', marginBottom: '10px' }}>Select Trainer:</h4>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
-              <button 
-                onClick={async () => {
-                  const trainers = await loadTrainers()
-                  if (trainers.length > 0) {
-                    const trainer = trainers[0]
-                    setCurrentTrainer(trainer)
-                    currentTrainerRef.current = trainer
-                    const pokemonData = await loadPokemonInventory(trainer.id)
-                    sendTrainerToGame(trainer.name)
-                    sendPokemonInventoryToGame(pokemonData)
-                    setOutput(`✅ ${trainer.name} selected with ${pokemonData.length} Pokemon. Ready to capture!`)
-                  } else {
-                    setOutput('❌ No trainers found in database. Please create a trainer first.')
-                  }
-                }}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: currentTrainer?.id === (async () => (await loadTrainers())[0]?.id)() ? '#4CAF50' : '#4a5568',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                👤 Trainer 1
-              </button>
-              
-              <button 
-                onClick={async () => {
-                  const trainers = await loadTrainers()
-                  if (trainers.length > 1) {
-                    const trainer = trainers[1]
-                    setCurrentTrainer(trainer)
-                    currentTrainerRef.current = trainer
-                    const pokemonData = await loadPokemonInventory(trainer.id)
-                    sendTrainerToGame(trainer.name)
-                    sendPokemonInventoryToGame(pokemonData)
-                    setOutput(`✅ ${trainer.name} selected with ${pokemonData.length} Pokemon. Ready to capture!`)
-                  } else {
-                    setOutput('❌ Less than 2 trainers found in database.')
-                  }
-                }}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: currentTrainer?.id === (async () => (await loadTrainers())[1]?.id)() ? '#4CAF50' : '#4a5568',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                👤 Trainer 2
-              </button>
-            </div>
-          </div>
-          
-          {/* Current Trainer Display */}
-          {currentTrainer && (
-            <div style={{
-              padding: '10px',
-              marginBottom: '15px',
-              backgroundColor: '#1a202c',
-              borderRadius: '4px',
-              border: '1px solid #4a5568'
-            }}>
-              <h4 style={{ color: '#ffffff', marginTop: 0 }}>Current Trainer: {currentTrainer.name}</h4>
-              <p style={{ color: '#a0aec0', margin: '5px 0' }}>Total Points: {totalPoints}</p>
-              <p style={{ color: '#a0aec0', margin: '5px 0' }}>Pokémon Count: {pokemonInventory.length}</p>
-            </div>
-          )}
-          
-          {/* Warning when no trainer selected */}
-          {!currentTrainer && (
-            <div style={{
-              padding: '10px',
-              marginBottom: '15px',
-              backgroundColor: '#742a2a',
-              borderRadius: '4px',
-              border: '1px solid #fc8181',
-              color: '#feb2b2'
-            }}>
-              ⚠️ <strong>No trainer selected!</strong> Please select a trainer above.
-            </div>
-          )}
-          
-          {/* Pokemon Inventory Display */}
-          {pokemonInventory.length > 0 && (
-            <div style={{ marginTop: '15px' }}>
-              <h4 style={{ color: '#ffffff' }}>Pokémon Inventory:</h4>
-              <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                {pokemonInventory.map((pokemon, index) => (
-                  <div key={index} style={{
-                    padding: '5px',
-                    margin: '2px 0',
-                    backgroundColor: '#1a202c',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    color: '#a0aec0'
-                  }}>
-                    {pokemon.pokemon_name} (Lv.{pokemon.level}) - {pokemon.points} pts
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -522,16 +758,7 @@ function App() {
           <h3>Python Editor</h3>
           
           {/* Game Status Indicator */}
-          <div style={{
-            padding: '5px 10px',
-            marginBottom: '10px',
-            borderRadius: '5px',
-            backgroundColor: gameStatus === 'battle' ? '#bd3a3aff' : '#37bc37ff',
-            color: 'white',
-            textAlign: 'center',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>
+          <div className={`game-status-indicator ${gameStatus === 'battle' ? 'game-status-battle' : 'game-status-overworld'}`}>
             {gameStatus === 'battle' ? 'IN BATTLE' : 'OVERWORLD'}
           </div>
           

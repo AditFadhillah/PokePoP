@@ -50,6 +50,8 @@ html, body {
   align-items: center;
   justify-content: flex-start;
   margin-bottom: 0rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .game-section h2 {
@@ -60,8 +62,10 @@ html, body {
 }
 
 .game-frame {
-  width: 864px;
-  height: 576px;
+  width: 100%;
+  max-width: 864px;
+  aspect-ratio: 3 / 2;
+  height: auto;
   border: none;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -158,6 +162,95 @@ html, body {
   white-space: pre-wrap;
   overflow-y: auto;
   overflow-x: auto;
+}
+
+/* User Info Bar */
+.user-info-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 16px;
+  background: #1a202c;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  border-bottom: 2px solid #4a5568;
+}
+
+.logout-button {
+  padding: 4px 12px;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background: #c53030;
+}
+
+/* Left Panel Variants */
+.left-panel-with-user {
+  margin-top: 48px;
+}
+
+.left-panel-no-user {
+  margin-top: 0;
+}
+
+/* Game Section Title */
+.game-section h3 {
+  color: #ffffff;
+  margin-top: 0;
+}
+
+/* Game Status Indicator */
+.game-status-indicator {
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  color: white;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.game-status-battle {
+  background-color: #bd3a3aff;
+}
+
+.game-status-overworld {
+  background-color: #37bc37ff;
+}
+
+/* Guest Login Button Container */
+.guest-login-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.guest-login-button {
+  padding: 12px 24px;
+  background: #6b7280;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.guest-login-button:hover {
+  background: #4b5563;
 }
 
 /* Responsive design */

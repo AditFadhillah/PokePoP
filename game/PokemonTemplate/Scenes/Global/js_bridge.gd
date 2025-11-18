@@ -5,6 +5,7 @@ signal enter_pressed_from_js
 signal trainer_updated_from_js(trainer_name: String)
 signal pokemon_inventory_updated_from_js(pokemon_data: Array)
 signal capture_triggered_from_js(pokemon_data: Dictionary)
+signal task_completed_from_js(task_completed: bool)
 
 func _ready():
 	# Only setup JavaScript bridge if running in web export
@@ -38,6 +39,15 @@ func setup_js_bridge():
 					pokemon_data: event.data.pokemon_data
 				};
 			}
+		} else if (event.data && event.data.type === 'TASK_COMPLETED') {
+			console.log('JS Bridge received TASK_COMPLETED:', event.data);
+			if (window.godot_js_bridge) {
+				window.godot_js_bridge.pendingTaskCompletion = {
+					completed: event.data.completed,
+					task_id: event.data.task_id
+				};
+				console.log('Stored in pendingTaskCompletion:', window.godot_js_bridge.pendingTaskCompletion);
+			}
 		}
 	});
 	
@@ -47,6 +57,7 @@ func setup_js_bridge():
 		pendingTrainerUpdate: null,
 		pendingInventoryUpdate: null,
 		pendingCapturetrigger: null,
+		pendingTaskCompletion: null,
 		sendMessageToReact: function(message) {
 			window.parent.postMessage({
 				type: 'GODOT_MESSAGE',
@@ -170,6 +181,32 @@ func _check_js_messages():
 		var pokemon_data = capture_result.get("pokemon_data", {})
 		if pokemon_data.size() > 0:
 			capture_triggered_from_js.emit(pokemon_data)
+	
+	# Check for task completion
+	var task_check = """
+	(function() {
+		if (window.godot_js_bridge && window.godot_js_bridge.pendingTaskCompletion) {
+			var task = window.godot_js_bridge.pendingTaskCompletion;
+			window.godot_js_bridge.pendingTaskCompletion = null;
+			return JSON.stringify(task);
+		}
+		return null;
+	})();
+	"""
+	
+	var task_json = JavaScriptBridge.eval(task_check)
+	
+	if task_json != null && typeof(task_json) == TYPE_STRING:
+		print("✅ Received task JSON: ", task_json)
+		var json = JSON.new()
+		var parse_result = json.parse(task_json)
+		
+		if parse_result == OK:
+			var task_data = json.data
+			if typeof(task_data) == TYPE_DICTIONARY:
+				var completed = task_data.get("completed", false)
+				print("✅ Task completion received from JS: ", completed)
+				task_completed_from_js.emit(completed)
 
 func simulate_enter_key():
 	# Create an input event for Enter key
@@ -184,3 +221,9 @@ func simulate_enter_key():
 	await get_tree().create_timer(0.1).timeout
 	input_event.pressed = false
 	Input.parse_input_event(input_event)
+
+# Call this function from your game's main script when ENTER is pressed during gameplay
+func notify_enter_pressed():
+	# Send signal to React that ENTER was pressed in game
+	send_message_to_react("ENTER_PRESSED_IN_GAME", {})
+	print("Sent ENTER_PRESSED_IN_GAME signal to React")

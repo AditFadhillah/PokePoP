@@ -17,7 +17,7 @@ func _ready():
 	JSBridge.pokemon_inventory_updated_from_js.connect(_on_pokemon_inventory_updated_from_react)
 	
 	# Set initial trainer label to show waiting state
-	trainer_label.text = "Trainer: Select a trainer"
+	trainer_label.text = "Trainer: ..."
 
 func _on_trainer_updated_from_react(trainer_name: String):
 	# Handle trainer update from React app
@@ -32,7 +32,7 @@ func setup_trainer_name():
 	# Get trainer name from GameManager
 	var trainer_name = GameManager.get_trainer_name()
 	if trainer_name == "":
-		trainer_label.text = "Trainer: Select a trainer"
+		trainer_label.text = "Trainer: ..."
 	else:
 		trainer_label.text = "Trainer: " + trainer_name
 

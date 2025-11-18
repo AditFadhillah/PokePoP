@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Testing inventory"
+git commit -m "timer and triner setup to DB"
 git push origin main
 
 npm run build

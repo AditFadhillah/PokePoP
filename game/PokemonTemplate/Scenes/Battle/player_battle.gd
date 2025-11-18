@@ -22,12 +22,6 @@ func _ready():
 	# Set Pikachu's level display
 	if player_level_label:
 		player_level_label.text = str(player_level)
-		print("✅ Pikachu level successfully set to: Lv", player_level)
-	else:
-		print("❌ ERROR: PlayerLv label not found!")
-		print("Available children:")
-		for child in get_children():
-			print("  - ", child.name, " (", child.get_class(), ")")
 
 func get_hp():
 	return hp

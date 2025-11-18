@@ -1,0 +1,24 @@
+import React from 'react'
+
+type Props = {
+  onOpenLogin: () => void
+  children?: React.ReactNode
+}
+
+export default function WelcomeView({ onOpenLogin, children }: Props) {
+  return (
+    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div style={{ width: 380, padding: 24, border: '1px solid #ddd', borderRadius: 8, background: '#fff', textAlign: 'center' }}>
+        <h2 style={{ marginTop: 0 }}>Welcome</h2>
+        <p style={{ color: '#555', marginTop: 0 }}>Please log in to continue.</p>
+        <button
+          onClick={onOpenLogin}
+          style={{ padding: '10px 14px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', width: '100%' }}
+        >
+          Login
+        </button>
+      </div>
+      {children}
+    </div>
+  )
+}

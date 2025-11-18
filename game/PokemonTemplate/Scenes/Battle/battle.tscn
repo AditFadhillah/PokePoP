@@ -286,7 +286,7 @@ theme_override_constants/shadow_offset_x = 3
 theme_override_constants/shadow_offset_y = 2
 theme_override_fonts/font = SubResource("FontVariation_g1pfo")
 theme_override_font_sizes/font_size = 19
-text = "PP 35/35
+text = "
 "
 
 [node name="DialogBox" type="Control" parent="CanvasLayer/UI"]
