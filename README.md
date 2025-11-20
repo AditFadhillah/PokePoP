@@ -164,6 +164,8 @@ git commit -m "New stairs for vulcano"
 
 git push neurogen ready
 
+git push origin ready:main --force
+
 git push origin main
 
 npm run build
