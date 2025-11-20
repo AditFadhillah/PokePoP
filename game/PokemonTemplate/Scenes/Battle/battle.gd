@@ -24,8 +24,8 @@ var begin_battle = false
 var capture_in_progress = false  # Flag to prevent input during capture
 
 # Battle timer variables
-var battle_timer = 100.0  # 10 seconds
-var time_remaining = 100.0
+var battle_timer = 600.0	# 10 minutes
+var time_remaining = 600.0
 var timer_active = false
 var timer_label: Label
 var battle_start_time: int = 0  # Track when battle started (in milliseconds)
@@ -39,7 +39,7 @@ var pokemon_pools = {
 }
 
 # Rare Pokemon that can appear in any region (low probability)
-var rare_pokemon = ["VAPOREON", "JOLTEON", "FLAREON", "DITTO", "MEW", "PIKACHU_CATCH"]
+var rare_pokemon = ["VAPOREON", "JOLTEON", "FLAREON", "DITTO", "MEW", "PIKACHU_"]
 var rare_probability = 0.05  # 5% chance for rare Pokemon
 
 var current_pokemon = ""
@@ -55,7 +55,6 @@ func _ready():
 	# Connect to JSBridge for task completion
 	if JSBridge:
 		JSBridge.task_completed_from_js.connect(_on_task_completed)
-		print("✅ Battle script connected to task completion signal (v2)")
 	
 	# Create timer label
 	create_timer_label()
@@ -85,23 +84,19 @@ func create_timer_label():
 func set_region(region: String):
 	# Called by player.gd before adding to scene tree
 	current_region = region
-	print("Battle region set to: ", region)
 
 func select_pokemon_for_region():
 	# Check for rare Pokemon first (5% chance)
 	if randf() < rare_probability:
 		current_pokemon = rare_pokemon[randi() % rare_pokemon.size()]
-		print("Rare Pokemon encountered: ", current_pokemon)
 		return
 	
 	# Get Pokemon pool for the current region
 	if pokemon_pools.has(current_region):
 		var region_pool = pokemon_pools[current_region]
 		current_pokemon = region_pool[randi() % region_pool.size()]
-		print("Region Pokemon encountered in ", current_region, ": ", current_pokemon)
 	else:
 		# Fallback to Forest if region not found
-		print("Warning: Unknown region '", current_region, "', using Forest")
 		var forest_pool = pokemon_pools["Forest"]
 		current_pokemon = forest_pool[randi() % forest_pool.size()]
 
@@ -115,11 +110,6 @@ func _process(delta):
 	# Update battle timer (hidden from player for suspense)
 	if timer_active and !capture_in_progress:
 		time_remaining -= delta
-		
-		# Console countdown every second (for debugging/tracking only)
-		var current_second = int(ceil(time_remaining))
-		if current_second != int(ceil(time_remaining + delta)):
-			print("⏰ Battle Timer: ", current_second, " seconds remaining")
 		
 		# Time's up - Pokemon flees
 		if time_remaining <= 0:
@@ -148,7 +138,6 @@ func on_player_dead():
 
 func pokemon_fled():
 	# Called when timer runs out
-	print("💨 Pokemon fled! Time ran out!")
 	capture_in_progress = true
 	is_menu_visible = false
 	menu.visible = false
@@ -172,7 +161,7 @@ func start_battle_timer():
 	timer_active = true
 	battle_start_time = Time.get_ticks_msec()  # Record start time in milliseconds
 	
-	print("⏰ Battle Timer Started: ", battle_timer, " seconds")
+	# print("⏰ Battle Timer Started: ", battle_timer, " seconds")
 	
 func move_menu_arrow(x,y):
 	# position the arrow on the menu 
@@ -237,9 +226,6 @@ func _trigger_capture():
 	timer_active = false
 	var capture_time_ms = Time.get_ticks_msec() - battle_start_time
 	
-	print("✅ Pokemon captured with ", ceil(time_remaining), " seconds remaining!")
-	print("⏱️ Capture Time: ", capture_time_ms, "ms (", capture_time_ms / 1000.0, " seconds)")
-	
 	# Calculate points based on level
 	var enemy_level = enemy.current_pokemon_level
 	var base_points = enemy_level * 100  # Level 1 = 100pts, Level 2 = 200pts, etc.
@@ -249,10 +235,7 @@ func _trigger_capture():
 	var time_bonus = int(time_percentage)
 	var total_points = base_points + time_bonus
 	
-	print("⏱️ Time Bonus: ", time_bonus, " points (", int(time_percentage), "% remaining)")
-	print("💰 Total Points: ", total_points, " (Base: ", base_points, " + Bonus: ", time_bonus, ")")
-	
-	show_dialog("You captured " + current_pokemon + "! +" + str(total_points) + " points!")
+	show_dialog("You captured " + current_pokemon + "! \nGet " + str(total_points) + " points!")
 	
 	# Add to inventory using GameManager (local storage)
 	GameManager.add_pokemon_to_inventory(current_pokemon, enemy_level, total_points)

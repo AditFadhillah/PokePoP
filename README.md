@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Leaderboard + better logo and layout"
+git commit -m "Interactable signs, better UI, Faster movement, References and Examples buttons, Background during login"
 git push origin main
 
 npm run build

@@ -39,11 +39,11 @@ func refresh_inventory():
 func create_pokemon_item(pokemon_data: Dictionary):
 	# Create a horizontal container for image and text
 	var item_container = HBoxContainer.new()
-	item_container.custom_minimum_size = Vector2(0, 40)
+	item_container.custom_minimum_size = Vector2(0, 10)
 	
 	# Create and add Pokemon image
 	var pokemon_image = TextureRect.new()
-	pokemon_image.custom_minimum_size = Vector2(32, 32)
+	pokemon_image.custom_minimum_size = Vector2(40, 40)
 	pokemon_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	pokemon_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	

@@ -107,7 +107,7 @@ func get_tile_below_player():
 	# Check if player is on a new tile
 	if current_tile != tile_below:
 		current_tile = tile_below
-		print("Current tile: ", current_tile)
+		# print("Current tile: ", current_tile)
 		
 		# Check which region the player is on
 		
@@ -116,37 +116,37 @@ func get_tile_below_player():
 			current_region = "Forest"
 			is_on_encounter_tile = true
 			region_found = true
-			print("Stepped on Forest (TallGrass)!")
+			# print("Stepped on Forest (TallGrass)!")
 		
 		# Check DryKelp (Beach/Sand)
 		elif dry_kelp_layer.get_cell_source_id(tile_below) != -1:
 			current_region = "Beach"
 			is_on_encounter_tile = true
 			region_found = true
-			print("Stepped on Beach (DryKelp)!")
+			# print("Stepped on Beach (DryKelp)!")
 		
 		# Check AshBramble (Volcano)
 		elif ash_bramble_layer.get_cell_source_id(tile_below) != -1:
 			current_region = "Volcano"
 			is_on_encounter_tile = true
 			region_found = true
-			print("Stepped on Volcano (AshBramble)!")
+			# print("Stepped on Volcano (AshBramble)!")
 		
 		# Check SwampReed (Swamp)
 		elif swamp_reed_layer.get_cell_source_id(tile_below) != -1:
 			current_region = "Swamp"
 			is_on_encounter_tile = true
 			region_found = true
-			print("Stepped on Swamp (SwampReed)!")
+			# print("Stepped on Swamp (SwampReed)!")
 		else:
 			is_on_encounter_tile = false
 			current_region = ""
-			print("Not on any encounter tile")
+			# print("Not on any encounter tile")
 		
 		# If on an encounter tile, check for random encounter
 		if is_on_encounter_tile:
 			random_encounter = randf()
-			print("Random encounter roll: ", random_encounter, " (need > ", probability, ")")
+			# print("Random encounter roll: ", random_encounter, " (need > ", probability, ")")
 			
 			if random_encounter > probability:
 				print("Battle triggered in region: ", current_region)

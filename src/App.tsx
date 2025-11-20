@@ -4,12 +4,16 @@ import { usePyodide } from './lib/usepyodide'
 import { supabase, dbHelpers } from './lib/supabase'
 // import { supabase as supabaseAuth } from './lib/databaseFunctions'
 import { useUsageSession } from './lib/useUsageSession'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 // Import neurogen login views and components
 import WelcomeView from './views/welcomeView'
 import SignupView from './views/signupView'
 import DashboardView from './views/dashboardView'
 import LoginModal from './components/loginmodal'
+import ExamplesModal from './views/ExamplesModal'
+import ReferencesModal from './views/ReferencesModal'
 
 function App() {
   // Python Editor States
@@ -64,6 +68,12 @@ print("Ready to start your adventure!")`)
 
   // Leaderboard State
   const [leaderboard, setLeaderboard] = useState<any[]>([])
+
+  // References Modal State
+  const [showReferences, setShowReferences] = useState(false)
+  
+  // Examples Modal State
+  const [showExamples, setShowExamples] = useState(false)
 
   // Usage Session Tracking
   const usageSession = useUsageSession(
@@ -231,7 +241,7 @@ print("Ready to start your adventure!")`)
     await loadLeaderboard()
     
     if (trainers.length > 0) {
-      setOutput(`🎮 Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
+      setOutput(`Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
     } else {
       setOutput('⚠️ No trainers found in database.')
     }
@@ -529,27 +539,8 @@ print("Ready to start your adventure!")`)
       
       console.log('Pokemon inserted successfully:', insertedData)
       
-      // Get current trainer's total points and update
-      const { data: trainerData } = await supabase
-        .from('trainers')
-        .select('total_points')
-        .eq('id', trainerId)
-        .single()
-      
-      const currentPoints = trainerData?.total_points || 0
-      
-      // Update trainer's total points
-      const { error: updateError } = await supabase
-        .from('trainers')
-        .update({ 
-          total_points: currentPoints + pokemonData.points,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', trainerId)
-      
-      if (updateError) {
-        console.error('Error updating trainer points:', updateError)
-      }
+      // Note: Trainer's total_points is automatically updated by database triggers
+      // No manual update needed here - the trigger recalculates from pokemon_inventory
       
       return true
     } catch (error) {
@@ -723,7 +714,7 @@ print("Ready to start your adventure!")`)
             onClick={() => {
               setCurrentAppUser(null)
               setAppView('main')
-              setOutput('🎮 Playing as guest')
+              setOutput('Playing as guest')
             }}
             className="guest-login-button"
           >
@@ -802,20 +793,34 @@ print("Ready to start your adventure!")`)
       {currentAppUser && (
         <div className="user-info-bar">
           <span className="trainer-username">Trainer: {currentAppUser.username}</span>
-          <button
-            onClick={async () => {
-              // End usage session before logout
-              if (usageSession.sessionActive) {
-                await usageSession.endSession()
-              }
-              setCurrentAppUser(null)
-              setCurrentTrainer(null)
-              setAppView('welcome')
-            }}
-            className="logout-button"
-          >
-            Logout
-          </button>
+          <div className="user-bar-buttons">
+            <button
+              onClick={() => setShowReferences(true)}
+              className="references-button"
+            >
+              References
+            </button>
+            <button
+              onClick={() => setShowExamples(true)}
+              className="examples-button"
+            >
+              Examples
+            </button>
+            <button
+              onClick={async () => {
+                // End usage session before logout
+                if (usageSession.sessionActive) {
+                  await usageSession.endSession()
+                }
+                setCurrentAppUser(null)
+                setCurrentTrainer(null)
+                setAppView('welcome')
+              }}
+              className="logout-button"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       )}
 
@@ -872,28 +877,47 @@ print("Ready to start your adventure!")`)
             {gameStatus === 'battle' ? 'IN BATTLE' : 'OVERWORLD'}
           </div>
           
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => {
-                // Ensure that tab is working in the editor 
-              if (e.key === 'Tab') {
-                e.preventDefault()
-                const target = e.target as HTMLTextAreaElement
-                const start = target.selectionStart
-                const end = target.selectionEnd
-                const newValue = code.substring(0, start) + '    ' + code.substring(end)
-                setCode(newValue)
-                // Set cursor after inserted tab
-                setTimeout(() => {
-                  target.selectionStart = target.selectionEnd = start + 4
-                }, 0)
-              }
-            }}
-            rows={6}
-            placeholder="Write your Python code here..."
-            className="python-textarea-compact"
-          />
+          <div className="code-editor-wrapper">
+            <SyntaxHighlighter
+              language="python"
+              style={vscDarkPlus}
+              customStyle={{
+                margin: 0,
+                borderRadius: '4px',
+                fontSize: '16px',
+                lineHeight: '1.4',
+                height: '100%',
+                minHeight: '300px',
+              }}
+              showLineNumbers={true}
+              wrapLines={true}
+              lineNumberStyle={{ minWidth: '3em', paddingRight: '1em', color: '#858585' }}
+            >
+              {code}
+            </SyntaxHighlighter>
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={(e) => {
+                  // Ensure that tab is working in the editor 
+                if (e.key === 'Tab') {
+                  e.preventDefault()
+                  const target = e.target as HTMLTextAreaElement
+                  const start = target.selectionStart
+                  const end = target.selectionEnd
+                  const newValue = code.substring(0, start) + '    ' + code.substring(end)
+                  setCode(newValue)
+                  // Set cursor after inserted tab
+                  setTimeout(() => {
+                    target.selectionStart = target.selectionEnd = start + 4
+                  }, 0)
+                }
+              }}
+              placeholder="Write your Python code here..."
+              className="python-textarea-overlay"
+              spellCheck={false}
+            />
+          </div>
 
 
           <button onClick={runPythonCode} className="run-button-compact">
@@ -905,6 +929,12 @@ print("Ready to start your adventure!")`)
           </pre>
         </div>
       </div>
+
+      {/* References Modal */}
+      <ReferencesModal show={showReferences} onClose={() => setShowReferences(false)} />
+
+      {/* Examples Modal */}
+      <ExamplesModal show={showExamples} onClose={() => setShowExamples(false)} />
     </div>
   )
 }

@@ -87,9 +87,10 @@ export function useUsageSession(username: string | null, metadata: any = {}) {
 
         if (error) {
           console.error('Failed to update heartbeat:', error)
-        } else {
-          console.log('💓 Heartbeat sent - Active time:', Math.floor(activeTimeRef.current / 1000), 's')
-        }
+        } 
+        // else {
+        //   console.log('💓 Heartbeat sent - Active time:', Math.floor(activeTimeRef.current / 1000), 's')
+        // }
       }
     }, 30000) // 30 seconds
 

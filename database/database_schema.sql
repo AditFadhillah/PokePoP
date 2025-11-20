@@ -114,6 +114,49 @@ CREATE TRIGGER trigger_update_trainer_points_delete
     FOR EACH ROW EXECUTE FUNCTION update_trainer_total_points();
 
 -- Create a view for trainer leaderboard with pokemon count
+-- Create automatic sync function for trainer points
+CREATE OR REPLACE FUNCTION update_trainer_total_points()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update the trainer's total_points based on sum of their Pokemon inventory
+    UPDATE public.trainers
+    SET total_points = COALESCE(
+        (SELECT SUM(points) 
+         FROM public.pokemon_inventory 
+         WHERE trainer_id = COALESCE(NEW.trainer_id, OLD.trainer_id)),
+        0
+    ),
+    updated_at = NOW()
+    WHERE id = COALESCE(NEW.trainer_id, OLD.trainer_id);
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS sync_trainer_points_on_insert ON public.pokemon_inventory;
+DROP TRIGGER IF EXISTS sync_trainer_points_on_update ON public.pokemon_inventory;
+DROP TRIGGER IF EXISTS sync_trainer_points_on_delete ON public.pokemon_inventory;
+
+-- Trigger when a new Pokemon is captured (INSERT)
+CREATE TRIGGER sync_trainer_points_on_insert
+    AFTER INSERT ON public.pokemon_inventory
+    FOR EACH ROW
+    EXECUTE FUNCTION update_trainer_total_points();
+
+-- Trigger when Pokemon points are updated (UPDATE)
+CREATE TRIGGER sync_trainer_points_on_update
+    AFTER UPDATE ON public.pokemon_inventory
+    FOR EACH ROW
+    EXECUTE FUNCTION update_trainer_total_points();
+
+-- Trigger when a Pokemon is deleted (DELETE)
+CREATE TRIGGER sync_trainer_points_on_delete
+    AFTER DELETE ON public.pokemon_inventory
+    FOR EACH ROW
+    EXECUTE FUNCTION update_trainer_total_points();
+
+-- Create leaderboard view (uses trainers.total_points which is now auto-synced)
 CREATE OR REPLACE VIEW public.trainer_leaderboard AS
 SELECT 
     t.id,

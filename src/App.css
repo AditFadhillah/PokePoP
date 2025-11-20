@@ -191,7 +191,7 @@ html, body {
   border: 2px solid #4a5568;
   border-radius: 6px;
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.4;
   resize: vertical;
   background-color: #1a202c;
@@ -229,8 +229,10 @@ html, body {
   padding: 0.75rem;
   margin-top: 0.75rem;
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
   min-height: 120px;
   max-height: 300px;
   white-space: pre-wrap;
@@ -259,6 +261,42 @@ html, body {
   font-weight: bold;
 }
 
+.user-bar-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.references-button {
+  padding: 4px 12px;
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.9em;
+}
+
+.references-button:hover {
+  background: #2c5282;
+}
+
+.examples-button {
+  padding: 4px 12px;
+  background: #38a169;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.9em;
+}
+
+.examples-button:hover {
+  background: #2f855a;
+}
+
 .logout-button {
   padding: 4px 12px;
   background: #e53e3e;
@@ -267,6 +305,7 @@ html, body {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-size: 0.9em;
 }
 
 .logout-button:hover {
@@ -332,6 +371,66 @@ html, body {
   background: #4b5563;
 }
 
+/* Code Editor with Syntax Highlighting */
+.code-editor-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.code-editor-wrapper > div {
+  height: 100% !important;
+}
+
+.code-editor-wrapper pre {
+  margin: 0 !important;
+  pointer-events: none;
+  height: 100% !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+.code-editor-wrapper pre code {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+.python-textarea-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  padding-left: 4em;
+  border: 2px solid #4a5568;
+  border-radius: 4px;
+  font-family: 'Courier New', 'Consolas', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: transparent;
+  color: transparent;
+  caret-color: white;
+  resize: none;
+  overflow: auto;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.python-textarea-overlay:focus {
+  outline: none;
+  border-color: #63b3ed;
+}
+
+.python-textarea-overlay::selection {
+  background: rgba(99, 179, 237, 0.3);
+}
+
 /* Responsive design */
 @media (max-width: 1200px) {
   .app-container {
@@ -345,4 +444,197 @@ html, body {
   .game-frame {
     height: 400px;
   }
+}
+
+/* References Modal */
+.references-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.references-modal {
+  background: #1a202c;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  margin-right: 20px;
+}
+
+.references-header {
+  padding: 20px;
+  border-bottom: 2px solid #4a5568;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: #1a202c;
+  z-index: 1;
+}
+
+.references-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5em;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2em;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background: #4a5568;
+}
+
+.references-content {
+  padding: 20px;
+  color: #e2e8f0;
+}
+
+.references-content section {
+  margin-bottom: 30px;
+}
+
+.references-content h3 {
+  color: #63b3ed;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+
+.references-content ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.references-content li {
+  padding: 8px 0;
+  border-bottom: 1px solid #2d3748;
+  font-family: 'Courier New', monospace;
+  font-size: 0.95em;
+}
+
+.references-content li:last-child {
+  border-bottom: none;
+}
+
+.code-example {
+  background: #2d3748;
+  padding: 15px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+/* Examples Modal Styles */
+.examples-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 1000;
+}
+
+.examples-modal {
+  background: #1a202c;
+  border-radius: 8px;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  margin-right: 20px;
+}
+
+.examples-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid #2d3748;
+  position: sticky;
+  top: 0;
+  background: #1a202c;
+  z-index: 1;
+}
+
+.examples-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5em;
+}
+
+.examples-content {
+  padding: 20px;
+  color: #e2e8f0;
+}
+
+.examples-content section {
+  margin-bottom: 30px;
+}
+
+.examples-content h3 {
+  color: #48bb78;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  border-bottom: 2px solid #48bb78;
+  padding-bottom: 8px;
+}
+
+.example-item {
+  margin-bottom: 20px;
+  background: #2d3748;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #48bb78;
+}
+
+.example-item h4 {
+  color: #68d391;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1em;
+}
+
+.example-item .code-example {
+  background: #1a202c;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
 }
