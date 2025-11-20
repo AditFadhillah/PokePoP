@@ -160,8 +160,8 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Interactable signs, better UI, Faster movement, References and Examples buttons, Background during login"
-git push origin main
+git commit -m "Fixed double-counting bug, removed debugging prints, refactored modals, auto-sync trainer points"
+git push origin ready
 
 npm run build
 npm run deploy
