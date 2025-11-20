@@ -161,7 +161,10 @@ git show HEAD
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
 git commit -m "Fixed double-counting bug, removed debugging prints, refactored modals, auto-sync trainer points"
-git push origin ready
+
+git push neurogen ready
+
+git push origin main
 
 npm run build
 npm run deploy
