@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Fixed double-counting bug, removed debugging prints, refactored modals, auto-sync trainer points"
+git commit -m "New stairs for vulcano"
 
 git push neurogen ready
 
