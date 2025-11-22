@@ -9,6 +9,9 @@ func _ready():
 	# Show inventory with fade in
 	anim.play("fade_in")
 	
+	# Connect to GameManager signal for real-time updates
+	GameManager.pokemon_inventory_changed.connect(_on_pokemon_inventory_changed)
+	
 	# Populate inventory
 	refresh_inventory()
 
@@ -36,11 +39,11 @@ func refresh_inventory():
 func create_pokemon_item(pokemon_data: Dictionary):
 	# Create a horizontal container for image and text
 	var item_container = HBoxContainer.new()
-	item_container.custom_minimum_size = Vector2(0, 40)
+	item_container.custom_minimum_size = Vector2(0, 10)
 	
 	# Create and add Pokemon image
 	var pokemon_image = TextureRect.new()
-	pokemon_image.custom_minimum_size = Vector2(32, 32)
+	pokemon_image.custom_minimum_size = Vector2(40, 40)
 	pokemon_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	pokemon_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	
@@ -78,3 +81,7 @@ func _on_animation_player_animation_finished(anim_name):
 	if anim_name == "fade_in":
 		# Inventory is now fully opened
 		pass
+
+func _on_pokemon_inventory_changed():
+	# Called when GameManager's Pokemon inventory changes
+	refresh_inventory()

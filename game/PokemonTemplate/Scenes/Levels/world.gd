@@ -3,132 +3,106 @@ extends Node2D
 @onready var world_music = $LittleRootTownMusic
 @onready var trainer_label = $UI/TrainerLabel
 @onready var inventory_indicator = $UI/InventoryIndicator
+@onready var interact_indicator = $UI/InteractIndicator
 @onready var ui_layer = $UI
 
 var inventory_scene = preload("res://Scenes/UI/inventory.tscn")
+var sign_scene = preload("res://Scenes/UI/sign_display.tscn")
+var welcome_scene = preload("res://Scenes/UI/welcome_display.tscn")
 
-# Variable to store the test Pokemon text from React
-var TEST_POKEMON = ""
+# Sign messages dictionary - maps tile coordinates to messages
+var sign_messages = {
+	Vector2i(2, 2): "Welcome to Flower Village!",
+	Vector2i(15, 9): "Check Tall Grass to find Pokemons!",
+	Vector2i(12, 14): "Every region has different unique Pokemons!",
+	Vector2i(18, 2): "Twin Lotus Pond",
+	Vector2i(20, 9): "The door is locked",
+	Vector2i(6, 11): "Probably shouldn't enter a strangers house",
+	Vector2i(9, 18): "Probably shouldn't enter a strangers house",
+	Vector2i(7, 18): "Probably shouldn't enter a strangers house",
+	Vector2i(17, 18): "Probably shouldn't enter a strangers house",
+	Vector2i(3, 14): "It's a tree",
 
-# Pokemon pool for parsing from text
-var pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
+	Vector2i(38, 9): "Welcome to Sunny Beach",
+	Vector2i(40, 14): "Check Washed-up Seaweed to find Pokemons!",
+	Vector2i(47, 7): "Beautiful sand castle, careful not to step on it!",
+	Vector2i(48, 7): "Beautiful sand castle, careful not to step on it!",
+	Vector2i(48, 12): "Beautiful sand castle, careful not to step on it!",
+	Vector2i(35, 14): "It's a palm tree",
+	
+	Vector2i(40, 30): "Welcome to Mangrove Swamp",
+	Vector2i(40, 28): "Check Tall Grass to find Pokemons!",
+	Vector2i(44, 32): "The cave is blocked off",
+	Vector2i(47, 35): "Overgrown plants blocks the entrance",
+	Vector2i(36, 37): "It's a scary cave, luckily it's blocked off",
+	Vector2i(34, 33): "It's a tree",
+
+	Vector2i(15, 29): "Welcome to Barren Volcano",
+	Vector2i(17, 29): "Check Rocks with Orange Crystals to find Pokemons!",
+	Vector2i(18, 32): "LAVA LAKE AHEAD, WALK WITH CAUTION!",
+	Vector2i(20, 29): "It's a big rock",
+
+	
+}
+
+var sign_displayed = false
+var player_node = null
+var welcome_shown = false
 
 func _ready():
 	world_music.play()
 	
-	# Debug: Set a test trainer name immediately
-	trainer_label.text = "Trainer: Debug Test"
-	print("World scene ready - set debug trainer name")
-	
 	# Listen for trainer updates from React
 	JSBridge.trainer_updated_from_js.connect(_on_trainer_updated_from_react)
-	print("Connected trainer_updated_from_js signal")
 	
 	# Listen for Pokemon inventory updates from React
 	JSBridge.pokemon_inventory_updated_from_js.connect(_on_pokemon_inventory_updated_from_react)
-	print("Connected pokemon_inventory_updated_from_js signal")
 	
-	# Listen for capture triggers from React
-	JSBridge.capture_triggered_from_js.connect(_on_capture_triggered_from_react)
-	print("Connected capture_triggered_from_js signal")
+	# Set initial trainer label to show waiting state
+	trainer_label.text = "Trainer: ..."
 	
-	# Listen for test Pokemon signal from React
-	JSBridge.test_pokemon_signal.connect(_on_test_pokemon_signal)
-	print("Connected test_pokemon_signal signal")
+	# Get reference to player
+	player_node = get_node_or_null("Player")
 	
-	# Set a default trainer name to avoid requesting from React
-	GameManager.set_trainer_name("Test Player")
-	setup_trainer_name()
-	
-	print("🎯 World ready - no trainer data requests to avoid CSV errors")
+	# Show welcome message when game starts
+	await get_tree().create_timer(0.5).timeout
+	show_welcome_message("Welcome to PyMon \nMove with WASD or Arrow Keys!")
+	welcome_shown = true
 
 func _on_trainer_updated_from_react(trainer_name: String):
 	# Handle trainer update from React app
-	print("RECEIVED TRAINER UPDATE FROM REACT: ", trainer_name)
 	GameManager.set_trainer_name(trainer_name)
-	
-	# Note: Pokemon inventory should be sent separately via POKEMON_INVENTORY_UPDATE message
-	# Not loading hardcoded test data here anymore
-	
-	setup_trainer_name()  # Update the UI
-	print("Trainer updated from React:", trainer_name)
+	setup_trainer_name()
 
 func _on_pokemon_inventory_updated_from_react(pokemon_data: Array):
 	# Handle Pokemon inventory update from React app
-	print("RECEIVED POKEMON INVENTORY UPDATE FROM REACT: ", pokemon_data.size(), " Pokemon")
 	GameManager.load_pokemon_from_external_data(pokemon_data)
-	print("Pokemon inventory updated from React:", pokemon_data.size(), " Pokemon loaded")
-
-func _on_test_pokemon_signal(pokemon_text: String):
-	# Handle test Pokemon signal from React with the actual text
-	print("🧪 SUCCESS! TEST_POKEMON signal received from React with text: '", pokemon_text, "'")
-	
-	# Store the text in the TEST_POKEMON variable
-	TEST_POKEMON = pokemon_text
-	print("🧪 Stored text in TEST_POKEMON variable: '", TEST_POKEMON, "'")
-	
-	# Parse the text to find any Pokemon names from the pool
-	var found_pokemon = ""
-	var pokemon_text_upper = pokemon_text.to_upper()
-	
-	for pokemon in pokemon_pool:
-		if pokemon_text_upper.contains(pokemon):
-			found_pokemon = pokemon
-			print("🎯 Found Pokemon '", pokemon, "' in text!")
-			break
-	
-	if found_pokemon != "":
-		print("🧪 Adding ", found_pokemon, " to inventory via direct add_pokemon_to_inventory call")
-		
-		# Calculate level and points (you can enhance this logic)
-		var level = 1
-		var points = level * 100
-		
-		# Directly call GameManager to add the found Pokemon
-		GameManager.add_pokemon_to_inventory(found_pokemon, level, points)
-		
-		print("🧪 Success! Added ", found_pokemon, " (Level ", level, ", ", points, " pts) to inventory!")
-	else:
-		print("🚨 No valid Pokemon found in text. Valid Pokemon: ", pokemon_pool)
-		print("🚨 Try typing: print('BULBASAUR') or print('PIDGEY') etc.")
 
 func setup_trainer_name():
 	# Get trainer name from GameManager
 	var trainer_name = GameManager.get_trainer_name()
-	print("Setting up trainer name: ", trainer_name)
-	if trainer_name == "" or trainer_name == "Ash":  # Default fallback
-		trainer_label.text = "Trainer: Loading..."
-		print("Using default loading text")
+	if trainer_name == "":
+		trainer_label.text = "Trainer: ..."
 	else:
 		trainer_label.text = "Trainer: " + trainer_name
-		print("Set trainer label to: ", trainer_label.text)
 
-func _process(delta):
-	# Control music playing
-	if (GameManager.is_battle or GameManager.is_inventory) and world_music.is_playing():
+func _process(_delta):
+	# Control music playing (don't stop music for signs or inventory)
+	if GameManager.is_battle and world_music.is_playing():
 		world_music.stop()
 	
-	if !GameManager.is_battle and !GameManager.is_inventory and !world_music.is_playing():
+	if !GameManager.is_battle and !world_music.is_playing():
 		world_music.play()
 	
 	# Control UI visibility during battle
 	update_ui_visibility()
 	
 	# Handle inventory input (E key)
-	if Input.is_action_just_pressed("inventory") and !GameManager.is_battle and !GameManager.is_inventory:
+	if Input.is_action_just_pressed("inventory") and !GameManager.is_battle and !GameManager.is_inventory and !sign_displayed:
 		open_inventory()
 	
-	# Test: Capture Pokemon button (ENTER key) - restored functionality
-	if Input.is_action_just_pressed("ui_accept") and !GameManager.is_battle and !GameManager.is_inventory:
-		test_capture_pokemon()
-
-func test_capture_pokemon():
-	# Instead of directly adding to inventory, check if there's a pending React capture trigger
-	print("TEST: ENTER key pressed - checking for pending capture triggers from React")
-	
-	# The actual capture should come from React via the capture_triggered_from_js signal
-	# This function now just logs that ENTER was pressed
-	print("If a Pokemon was captured, it should come from React communication, not hardcoded here")
+	# Check for nearby signs
+	check_sign_interaction()
 
 func update_ui_visibility():
 	# Hide UI elements during battle, show them otherwise
@@ -137,6 +111,7 @@ func update_ui_visibility():
 	# Option 1: Hide individual elements
 	trainer_label.visible = should_show_ui
 	inventory_indicator.visible = should_show_ui
+	interact_indicator.visible = should_show_ui
 	
 	# Option 2: Alternatively, you could hide the entire UI layer
 	# ui_layer.visible = should_show_ui
@@ -145,3 +120,70 @@ func open_inventory():
 	GameManager.is_inventory = true
 	var inventory_instance = inventory_scene.instantiate()
 	get_tree().current_scene.add_child(inventory_instance)
+
+func check_sign_interaction():
+	# Try to find player if not already set
+	if !player_node:
+		player_node = get_node_or_null("Player")
+		if !player_node:
+			return
+	
+	# Check if player is near a sign and press interaction key
+	if GameManager.is_battle or GameManager.is_inventory or sign_displayed:
+		return
+	
+	# Get player's tile position
+	var player_pos = player_node.global_position
+	var tile_pos = Vector2i(int(player_pos.x / 16), int(player_pos.y / 16))
+	
+	# Check adjacent tiles (one block away in all 4 directions)
+	var adjacent_positions = [
+		tile_pos,  # Current position
+		tile_pos + Vector2i(0, -1),  # Up
+		tile_pos + Vector2i(0, 1),   # Down
+		tile_pos + Vector2i(-1, 0),  # Left
+		tile_pos + Vector2i(1, 0)    # Right
+	]
+	
+	# Check if player presses F key near a sign (using direct key check)
+	if Input.is_physical_key_pressed(KEY_F):
+		for adj_pos in adjacent_positions:
+			if sign_messages.has(adj_pos):
+				show_sign(sign_messages[adj_pos])
+				# Add small delay to prevent multiple triggers
+				await get_tree().create_timer(0.2).timeout
+				return
+
+func show_sign(message: String):
+	sign_displayed = true
+	var sign_instance = sign_scene.instantiate()
+	sign_instance.set_message(message)
+	get_tree().current_scene.add_child(sign_instance)
+	
+	# Connect to sign's closed signal to reset flag
+	sign_instance.tree_exited.connect(_on_sign_closed)
+
+func _on_sign_closed():
+	sign_displayed = false
+
+func show_welcome_message(message: String):
+	sign_displayed = true
+	var welcome_instance = welcome_scene.instantiate()
+	welcome_instance.set_message(message)
+	get_tree().current_scene.add_child(welcome_instance)
+	
+	# Wait for first message to close, then show second message
+	await welcome_instance.tree_exited
+	sign_displayed = false
+	
+	# Wait a brief moment before showing second message
+	await get_tree().create_timer(0.3).timeout
+	
+	# Show second welcome message
+	sign_displayed = true
+	var second_welcome = welcome_scene.instantiate()
+	second_welcome.set_message("Press F to interact with signs \nPress E to check inventory")
+	get_tree().current_scene.add_child(second_welcome)
+	
+	# Connect to second message's closed signal to reset flag
+	second_welcome.tree_exited.connect(_on_sign_closed)

@@ -23,9 +23,27 @@ var is_menu_visible = false
 var begin_battle = false
 var capture_in_progress = false  # Flag to prevent input during capture
 
-# Random Pokemon encounter system
-var pokemon_pool = ["BULBASAUR", "CATERPIE", "EEVEE", "PIDGEY", "VULPIX", "RATTATA"]
+# Battle timer variables
+var battle_timer = 600.0	# 10 minutes
+var time_remaining = 600.0
+var timer_active = false
+var timer_label: Label
+var battle_start_time: int = 0  # Track when battle started (in milliseconds)
+
+# Region-based Pokemon pools
+var pokemon_pools = {
+	"Forest": ["RATTATA", "CATERPIE", "EEVEE", "VULPIX", "BULBASAUR", "PIDGEY"],
+	"Beach": ["SQUIRTLE", "HORSEA", "MEOWTH", "KRABBY", "SEEL", "MAGIKARP"],
+	"Volcano": ["CHARMANDER", "DIGLETT", "CUBONE", "RHYHORN", "PONYTA", "GEODUDE"],
+	"Swamp": ["GRIMER", "GASTLY", "ODDISH", "ZUBAT", "VENONAT", "EKANS"]
+}
+
+# Rare Pokemon that can appear in any region (low probability)
+var rare_pokemon = ["VAPOREON", "JOLTEON", "FLAREON", "DITTO", "MEW", "PIKACHU_"]
+var rare_probability = 0.05  # 5% chance for rare Pokemon
+
 var current_pokemon = ""
+var current_region = ""
 
 func _ready():
 	SignalManager.connect("btn_pos", move_menu_arrow)
@@ -34,8 +52,15 @@ func _ready():
 	SignalManager.connect("enemy_dead", on_enemy_dead)
 	SignalManager.connect("player_dead", on_player_dead)
 	
-	# Select random Pokemon for this battle
-	current_pokemon = pokemon_pool[randi() % pokemon_pool.size()]
+	# Connect to JSBridge for task completion
+	if JSBridge:
+		JSBridge.task_completed_from_js.connect(_on_task_completed)
+	
+	# Create timer label
+	create_timer_label()
+	
+	# Select Pokemon based on region (will be set by set_region before _ready)
+	select_pokemon_for_region()
 
 	# Generate random level (1-3 for variety)
 	var random_level = randi_range(1, 3)
@@ -51,12 +76,45 @@ func _ready():
 	dialog.visible = false	
 	$BattleMusic.play()
 
-func _process(_delta):
+func create_timer_label():
+	# Timer label creation (kept hidden from player, only console logs visible)
+	# No visual timer needed - creates suspense!
+	pass
+
+func set_region(region: String):
+	# Called by player.gd before adding to scene tree
+	current_region = region
+
+func select_pokemon_for_region():
+	# Check for rare Pokemon first (5% chance)
+	if randf() < rare_probability:
+		current_pokemon = rare_pokemon[randi() % rare_pokemon.size()]
+		return
+	
+	# Get Pokemon pool for the current region
+	if pokemon_pools.has(current_region):
+		var region_pool = pokemon_pools[current_region]
+		current_pokemon = region_pool[randi() % region_pool.size()]
+	else:
+		# Fallback to Forest if region not found
+		var forest_pool = pokemon_pools["Forest"]
+		current_pokemon = forest_pool[randi() % forest_pool.size()]
+
+func _process(delta):
 	click_to_continue.visible = is_dialog_finished
 	
 	if begin_battle:
 		show_dialog("A wild " + current_pokemon + " appeared!")
 		begin_battle = false
+		
+	# Update battle timer (hidden from player for suspense)
+	if timer_active and !capture_in_progress:
+		time_remaining -= delta
+		
+		# Time's up - Pokemon flees
+		if time_remaining <= 0:
+			timer_active = false
+			pokemon_fled()
 		
 	if Input.is_action_just_pressed("ui_accept") and !is_menu_visible and !capture_in_progress and enemy.hp > 0:
 		if is_dialog_finished:
@@ -78,6 +136,32 @@ func on_player_dead():
 	# No longer needed for capture system  
 	pass
 
+func pokemon_fled():
+	# Called when timer runs out
+	capture_in_progress = true
+	is_menu_visible = false
+	menu.visible = false
+	
+	show_dialog(current_pokemon + " fled from battle!")
+	
+	# Send signal to React
+	if JSBridge:
+		JSBridge.send_message_to_react("POKEMON_FLED", {
+			"pokemon_name": current_pokemon,
+			"reason": "time_limit"
+		})
+	
+	# Wait then exit battle
+	await get_tree().create_timer(2.0).timeout
+	anim.play("fade_out")
+
+func start_battle_timer():
+	# Start the countdown timer (hidden from player for added suspense)
+	time_remaining = battle_timer
+	timer_active = true
+	battle_start_time = Time.get_ticks_msec()  # Record start time in milliseconds
+	
+	# print("⏰ Battle Timer Started: ", battle_timer, " seconds")
 	
 func move_menu_arrow(x,y):
 	# position the arrow on the menu 
@@ -118,25 +202,54 @@ func next_text() -> void:
 	
 	return
 
-func _on_attack_btn_1_pressed():
-	# Attack instantly defeats/captures the Pokémon
+func _on_task_completed(completed: bool):
+	# Called when React sends task completion result
+	if completed:
+		# Task solved correctly - trigger capture
+		_trigger_capture()
+	else:
+		# Task failed - show message
+		show_dialog("Task failed! Try again!")
+		is_menu_visible = false
+		# Allow player to try again
+		await get_tree().create_timer(1.5).timeout
+		menu.visible = true
+		is_menu_visible = true
+		attack_btn.grab_focus()
+
+func _trigger_capture():
+	# Triggered when task is completed successfully
 	is_menu_visible = false
 	capture_in_progress = true  # Prevent input during capture
-	show_dialog("You captured " + current_pokemon + "!")
+	
+	# Stop the timer and calculate capture duration
+	timer_active = false
+	var capture_time_ms = Time.get_ticks_msec() - battle_start_time
 	
 	# Calculate points based on level
 	var enemy_level = enemy.current_pokemon_level
-	var points = enemy_level * 100  # Level 1 = 100pts, Level 2 = 200pts, etc.
+	var base_points = enemy_level * 100  # Level 1 = 100pts, Level 2 = 200pts, etc.
+	
+	# Calculate time bonus (percentage of time remaining)
+	var time_percentage = (time_remaining / battle_timer) * 100.0
+	var time_bonus = int(time_percentage)
+	var total_points = base_points + time_bonus
+	
+	show_dialog("You captured " + current_pokemon + "! \nGet " + str(total_points) + " points!")
 	
 	# Add to inventory using GameManager (local storage)
-	GameManager.add_pokemon_to_inventory(current_pokemon, enemy_level, points)
+	GameManager.add_pokemon_to_inventory(current_pokemon, enemy_level, total_points)
 	
 	# Send capture data to React/Database
 	if JSBridge:
 		JSBridge.send_message_to_react("POKEMON_CAPTURED", {
 			"pokemon_name": current_pokemon,
 			"level": enemy_level,
-			"points": points,
+			"points": total_points,
+			"base_points": base_points,
+			"time_bonus": time_bonus,
+			"time_percentage": int(time_percentage),
+			"capture_time_ms": capture_time_ms,
 			"captured_at": Time.get_datetime_string_from_system()
 		})
 	
@@ -144,8 +257,16 @@ func _on_attack_btn_1_pressed():
 	await get_tree().create_timer(2.0).timeout 
 	anim.play("fade_out")
 
+func _on_attack_btn_1_pressed():
+	# Button now triggers task validation instead of instant capture
+	is_menu_visible = false
+	show_dialog("Solve the programming task to capture " + current_pokemon + "!")
+	# React will handle showing the task and validating the solution
+
 func _on_run_btn_pressed():
 	# exit battle
+	timer_active = false
+	
 	show_dialog("Run away safely")
 	anim.play("fade_out")
 
@@ -159,9 +280,15 @@ func _on_animation_player_animation_finished(anim_name):
 		
 	if anim_name == "fade_in":
 		begin_battle = true
-		# Send signal to React that battle has started
+		# Start the battle timer
+		start_battle_timer()
+		# Send signal to React that battle has started and request a programming task
 		if JSBridge:
-			JSBridge.send_message_to_react("BATTLE_STARTED", {"message": "in battle"})
+			JSBridge.send_message_to_react("BATTLE_STARTED", {
+				"message": "in battle",
+				"pokemon_name": current_pokemon,
+				"pokemon_level": enemy.current_pokemon_level
+			})
 
 func on_enemy_turn():
 	# No longer needed for capture system

@@ -92,7 +92,14 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "TESTING TO RUN"
+git commit -m "Completed the regions and all pokemons"
+
+git commit -m "feat: Add trainer selection and Pokemon capture system with CSV storage
+- Implemented trainer selection with 2 test trainers
+- Added CSV-based Pokemon inventory loading filtered by trainer_id
+- Integrated Pokemon capture from Godot game to CSV via localStorage
+- Added trainer name display in Godot UI using signal system"
+
 git push origin main
 
 npm run build

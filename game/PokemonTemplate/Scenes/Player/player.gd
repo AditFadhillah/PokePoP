@@ -8,10 +8,16 @@ var is_alive = true
 var move_direction = Vector2.ZERO
 
 # tile data
-var is_on_tall_grass
+var is_on_encounter_tile = false
 var current_tile: Vector2i
+var current_region: String = ""
 @onready var tiles_node = get_tree().current_scene.get_node("Tiles")
-@onready var tall_grass_layer: TileMapLayer
+
+# Region tile layers
+@onready var tall_grass_layer: TileMapLayer  # Forest
+@onready var dry_kelp_layer: TileMapLayer    # Beach/Sand
+@onready var ash_bramble_layer: TileMapLayer # Volcano
+@onready var swamp_reed_layer: TileMapLayer  # Swamp
 
 # battle variables
 var rng = RandomNumberGenerator.new()
@@ -23,13 +29,17 @@ var probability = 0.85  # 15% encounter rate (1.0 - 0.85 = 0.15)
 func _ready():
 	SignalManager.connect("instantiate_battle", battle)
 	randomize()
-	# Get the TallGrass layer specifically
+	# Get all region tile layers
 	if tiles_node:
 		tall_grass_layer = tiles_node.get_node("TallGrass")
-		if tall_grass_layer:
-			print("TallGrass layer found successfully!")
+		dry_kelp_layer = tiles_node.get_node("DryKelp")
+		ash_bramble_layer = tiles_node.get_node("AshBramble")
+		swamp_reed_layer = tiles_node.get_node("SwampReed")
+		
+		if tall_grass_layer and dry_kelp_layer and ash_bramble_layer and swamp_reed_layer:
+			print("All region layers found successfully!")
 		else:
-			print("Error: TallGrass layer not found under Tiles node")
+			print("Warning: Some region layers not found")
 	else:
 		print("Error: Tiles node not found!")
 	
@@ -85,43 +95,73 @@ func move():
 
 
 func get_tile_below_player():
-	# Check if tall_grass_layer exists before using it
-	if not tall_grass_layer:
-		print("TallGrass layer not available, skipping encounter check")
+	# Check if tile layers exist
+	if not tall_grass_layer or not dry_kelp_layer or not ash_bramble_layer or not swamp_reed_layer:
+		print("Region layers not available, skipping encounter check")
 		return
 	
-	# get tile position below player
+	# Get tile position below player (use any layer for position calculation)
 	var tile_below: Vector2i = tall_grass_layer.local_to_map(position)
+	var region_found = false
 	
-	# check if player is on a new tile
+	# Check if player is on a new tile
 	if current_tile != tile_below:
 		current_tile = tile_below
-		print("Current tile: ", current_tile)
+		# print("Current tile: ", current_tile)
 		
-		# check if there's a tall grass tile at this position
-		var grass_tile_source_id = tall_grass_layer.get_cell_source_id(tile_below)
-		is_on_tall_grass = grass_tile_source_id != -1  # -1 means no tile
+		# Check which region the player is on
 		
-		if is_on_tall_grass:
-			print("Stepped on tall grass!")
-			
-			# calculate probability of a random encounter
+		# Check TallGrass (Forest)
+		if tall_grass_layer.get_cell_source_id(tile_below) != -1:
+			current_region = "Forest"
+			is_on_encounter_tile = true
+			region_found = true
+			# print("Stepped on Forest (TallGrass)!")
+		
+		# Check DryKelp (Beach/Sand)
+		elif dry_kelp_layer.get_cell_source_id(tile_below) != -1:
+			current_region = "Beach"
+			is_on_encounter_tile = true
+			region_found = true
+			# print("Stepped on Beach (DryKelp)!")
+		
+		# Check AshBramble (Volcano)
+		elif ash_bramble_layer.get_cell_source_id(tile_below) != -1:
+			current_region = "Volcano"
+			is_on_encounter_tile = true
+			region_found = true
+			# print("Stepped on Volcano (AshBramble)!")
+		
+		# Check SwampReed (Swamp)
+		elif swamp_reed_layer.get_cell_source_id(tile_below) != -1:
+			current_region = "Swamp"
+			is_on_encounter_tile = true
+			region_found = true
+			# print("Stepped on Swamp (SwampReed)!")
+		else:
+			is_on_encounter_tile = false
+			current_region = ""
+			# print("Not on any encounter tile")
+		
+		# If on an encounter tile, check for random encounter
+		if is_on_encounter_tile:
 			random_encounter = randf()
-			print("Random encounter roll: ", random_encounter, " (need > ", probability, ")")
+			# print("Random encounter roll: ", random_encounter, " (need > ", probability, ")")
 			
 			if random_encounter > probability:
-				print("Battle triggered!")
+				print("Battle triggered in region: ", current_region)
 				battle()
-		else:
-			print("Not on tall grass")
 	
-	# Update grass status
-	if not is_on_tall_grass:
-		is_on_tall_grass = false
+	# Update encounter status
+	if not region_found:
+		is_on_encounter_tile = false
+		current_region = ""
 
 
 func battle():
-	# instantiate the battle scene
+	# instantiate the battle scene with region information
 	GameManager.is_battle = true
 	var battle_instance = battle_scene.instantiate()
+	# Pass the current region to the battle scene
+	battle_instance.set_region(current_region)
 	add_child(battle_instance)
