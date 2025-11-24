@@ -92,7 +92,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "Ready to testing
+git commit -m "Ready to testing"
 
 git commit -m "feat: Add trainer selection and Pokemon capture system with CSV storage
 - Implemented trainer selection with 2 test trainers
