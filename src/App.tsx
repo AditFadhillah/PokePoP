@@ -6,7 +6,7 @@ import { supabase, dbHelpers } from './lib/supabase'
 import { useUsageSession } from './lib/useUsageSession'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { updateCaptureStats, initializeUserStats, updateLoginStreak, updateSessionDuration } from './lib/achievementHelpers'
+import { updateCaptureStats, initializeUserStats, updateLoginStreak } from './lib/achievementHelpers'
 
 // Import neurogen login views and components
 import WelcomeView from './views/welcomeView'

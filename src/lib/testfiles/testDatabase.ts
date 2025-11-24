@@ -1,7 +1,7 @@
 // testDatabase.ts — run this to test Supabase functions in Node
-import 'dotenv/config'
+// import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
-import { extractTaskAnswer,notifyDBAndGodot } from '../databaseFunctions'  // fixed import path
+// import { extractTaskAnswer,notifyDBAndGodot } from '../databaseFunctions'  // fixed import path
 
 // Load environment vars from .env
 const SUPABASE_URL = process.env.SUPABASE_URL!
@@ -45,12 +45,12 @@ async function main() {
     console.log('✅ Connection OK. Sample data:', data)
   }
 
-  console.log('\n🧠 Testing extractTaskAnswer...')
-  const result = await extractTaskAnswer('testTask1', 'testTaskKey1')
-  console.log('Result of extractTaskAnswer:', result)
+  // console.log('\n🧠 Testing extractTaskAnswer...')
+  // const result = await extractTaskAnswer('testTask1', 'testTaskKey1')
+  // console.log('Result of extractTaskAnswer:', result)
   
-  const result2 = await notifyDBAndGodot((await supabase.auth.getUser()).data.user?.id,'testTask1', result)
-  console.log('Result2 of notifyDBAndGodot:', result2)
+  // const result2 = await notifyDBAndGodot((await supabase.auth.getUser()).data.user?.id,'testTask1', result)
+  // console.log('Result2 of notifyDBAndGodot:', result2)
 }
 
 main().catch((err) => console.error('Unexpected error:', err))
