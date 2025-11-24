@@ -3,7 +3,7 @@ extends Node
 
 signal enter_pressed_from_js
 signal trainer_updated_from_js(trainer_name: String)
-signal pokemon_inventory_updated_from_js(pokemon_data: Array)
+signal pokemon_inventory_updated_from_js(pokemon_data: Array, total_points: int)
 signal capture_triggered_from_js(pokemon_data: Dictionary)
 signal task_completed_from_js(task_completed: bool)
 
@@ -24,13 +24,15 @@ func setup_js_bridge():
 		} else if (event.data && event.data.type === 'TRAINER_SELECTED') {
 			if (window.godot_js_bridge) {
 				window.godot_js_bridge.pendingTrainerUpdate = {
-					trainer_name: event.data.trainer_name
+					trainer_name: event.data.trainer_name,
+					total_points: event.data.total_points || 0
 				};
 			}
 		} else if (event.data && event.data.type === 'POKEMON_INVENTORY_UPDATE') {
 			if (window.godot_js_bridge) {
 				window.godot_js_bridge.pendingInventoryUpdate = {
-					pokemon_data: event.data.pokemon_data
+					pokemon_data: event.data.pokemon_data,
+					total_points: event.data.total_points || 0
 				};
 			}
 		} else if (event.data && event.data.type === 'TRIGGER_CAPTURE') {
@@ -134,7 +136,14 @@ func _check_js_messages():
 			
 			if typeof(trainer_result) == TYPE_DICTIONARY:
 				var trainer_name = trainer_result.get("trainer_name", "")
+				var total_points = trainer_result.get("total_points", 0)
+				print("👤 Trainer update received - Name: ", trainer_name, " Total points from DB: ", total_points)
 				if trainer_name != "":
+					# Store the total_points in GameManager
+					if total_points > 0:
+						GameManager.set_total_points_override(total_points)
+					else:
+						print("⚠️ Warning: total_points is 0 or not provided in trainer update!")
 					trainer_updated_from_js.emit(trainer_name)
 	
 	# Check for inventory updates
@@ -162,8 +171,11 @@ func _check_js_messages():
 				var inventory_result = json.data
 				if typeof(inventory_result) == TYPE_DICTIONARY:
 					var pokemon_data = inventory_result.get("pokemon_data", [])
+					var total_points = inventory_result.get("total_points", 0)
+					print("📦 Inventory update received - Pokemon count: ", pokemon_data.size(), " Total points from DB: ", total_points)
 					if pokemon_data.size() > 0:
-						pokemon_inventory_updated_from_js.emit(pokemon_data)
+						# Emit with total_points so it can be used immediately
+						pokemon_inventory_updated_from_js.emit(pokemon_data, total_points)
 	
 	# Check for capture triggers
 	var capture_check = """

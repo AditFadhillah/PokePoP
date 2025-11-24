@@ -1,6 +1,20 @@
 # Programming Tasks - Solution Cheat Sheet
 
-This document contains the correct solutions for all 20 beginner programming tasks.
+This document contains the correct solutions for all 24 beginner programming tasks.
+
+## Task Organization by Region
+
+### 🌲 Forest Region - Basic Loops (6 tasks)
+Tasks 1, 3, 9, 12, 15, 18 - Focus on for loops, while loops, and iteration
+
+### 🏖️ Beach Region - Dictionaries (7 tasks)  
+Tasks 2, 4, 7, 10, 13, 16, 20 - Focus on dictionary operations and methods
+
+### 🌋 Volcano Region - Regex (6 tasks)
+Tasks 5, 8, 11, 14, 17, 19 - Focus on regular expressions and pattern matching
+
+### 🐸 Swamp Region - Advanced/Tuples (5 tasks)
+Tasks 6, 21, 22, 23, 24 - Focus on tuples, nested structures, and advanced concepts
 
 ---
 

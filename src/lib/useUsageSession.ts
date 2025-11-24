@@ -91,8 +91,8 @@ export function useUsageSession(username: string | null, metadata: any = {}) {
         // After a successful heartbeat, recompute total active minutes and unlock duration achievements
         if (!error && username) {
           try {
-            const { data: mins, error: minsErr } = await supabase.rpc('get_total_active_minutes', {
-              p_username: username
+            const { data: mins, error: minsErr } = await supabase.rpc('get_user_total_active_time', {
+              user_name: username
             })
 
             if (!minsErr && typeof mins === 'number') {
@@ -108,7 +108,7 @@ export function useUsageSession(username: string | null, metadata: any = {}) {
                 console.log('🎉 Duration achievements unlocked:', unlocked)
               }
             } else if (minsErr) {
-              console.error('get_total_active_minutes error:', minsErr)
+              console.error('get_user_total_active_time error:', minsErr)
             }
           } catch (e) {
             console.error('Duration achievement check failed:', e)

@@ -297,6 +297,24 @@ html, body {
   background: #2f855a;
 }
 
+.milestones-button {
+  padding: 4px 12px;
+  background: #fbbf24;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.milestones-button:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(251, 191, 36, 0.4);
+}
+
 .logout-button {
   padding: 4px 12px;
   background: #e53e3e;
@@ -310,6 +328,21 @@ html, body {
 
 .logout-button:hover {
   background: #c53030;
+}
+
+.login-button {
+  padding: 4px 12px;
+  background: #48bb78;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 0.9em;
+}
+
+.login-button:hover {
+  background: #38a169;
 }
 
 /* Left Panel Variants */
@@ -551,6 +584,33 @@ html, body {
   font-size: 0.9em;
   line-height: 1.6;
   color: #e2e8f0;
+}
+
+/* References Modal Example Items - Blue Theme */
+.references-content .example-item {
+  margin-bottom: 20px;
+  background: #2d3748;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #4299e1;
+}
+
+.references-content .example-item h4 {
+  color: #63b3ed;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1em;
+}
+
+.references-content .example-item .code-example {
+  background: #1a202c;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
 }
 
 /* Examples Modal Styles */

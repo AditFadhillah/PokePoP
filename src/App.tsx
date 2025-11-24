@@ -6,6 +6,7 @@ import { supabase, dbHelpers } from './lib/supabase'
 import { useUsageSession } from './lib/useUsageSession'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { updateCaptureStats, initializeUserStats, updateLoginStreak, updateSessionDuration } from './lib/achievementHelpers'
 
 // Import neurogen login views and components
 import WelcomeView from './views/welcomeView'
@@ -14,6 +15,7 @@ import DashboardView from './views/dashboardView'
 import LoginModal from './components/loginmodal'
 import ExamplesModal from './views/ExamplesModal'
 import ReferencesModal from './views/ReferencesModal'
+import MilestonesModal from './views/MilestonesModal'
 
 function App() {
   // Python Editor States
@@ -46,6 +48,7 @@ print("Ready to start your adventure!")`)
 
   // App-level user (username/password stored in app_users table)
   const [currentAppUser, setCurrentAppUser] = useState<any>(null)
+  const currentAppUserRef = useRef<any>(null)
 
   // Login modal + auth fields (username-based)
   const [showLogin, setShowLogin] = useState(false)
@@ -74,6 +77,12 @@ print("Ready to start your adventure!")`)
   
   // Examples Modal State
   const [showExamples, setShowExamples] = useState(false)
+  
+  // Milestones Modal State
+  const [showMilestones, setShowMilestones] = useState(false)
+
+  // Current Battle Region State (for achievement tracking)
+  const [currentBattleRegion, setCurrentBattleRegion] = useState<string | null>(null)
 
   // Usage Session Tracking
   const usageSession = useUsageSession(
@@ -124,8 +133,14 @@ print("Ready to start your adventure!")`)
       const trainerPokemon = data || []
       setPokemonInventory(trainerPokemon)
       
-      // Calculate total points
-      const points = trainerPokemon.reduce((sum, pokemon) => sum + parseInt(pokemon.points.toString()), 0)
+      // Get total_points from leaderboard view (includes pokemon points + achievement points)
+      const { data: trainerData } = await supabase
+        .from('trainer_leaderboard')
+        .select('total_points')
+        .eq('id', trainerId)
+        .single()
+      
+      const points = trainerData?.total_points || 0
       setTotalPoints(points)
       
       return trainerPokemon
@@ -146,8 +161,8 @@ print("Ready to start your adventure!")`)
       const pokemonData = await loadPokemonInventory(trainer.id)
       
       // Send trainer and Pokemon data to game
-      sendTrainerToGame(trainer.name)
-      sendPokemonInventoryToGame(pokemonData)
+      await sendTrainerToGame(trainer.name)
+      await sendPokemonInventoryToGame(pokemonData)
       
       return trainer
     }
@@ -271,44 +286,26 @@ print("Ready to start your adventure!")`)
 
       // Login successful
       setCurrentAppUser(data)
+      currentAppUserRef.current = data // Keep ref in sync
       setShowLogin(false)
       setAuthMessage(null)
       setLoginUsername('')
       setLoginPassword('')
 
-      // Record login event and unlock login streak achievements
-      try {
-        await supabase.from('login_events').insert({ username: data.username })
-        const { data: streak, error: streakErr } = await supabase.rpc('compute_login_streak', {
-          p_username: data.username
-        })
-        if (!streakErr && streak != null) {
-          const { data: unlocked, error: unlockErr } = await supabase.rpc('check_achievements', {
-            p_username: data.username,
-            p_metric: 'login_streak_days',
-            p_value: streak
-          })
-          if (unlockErr) {
-            console.error('Login streak achievement check error:', unlockErr)
-          } else if (unlocked && unlocked.length > 0) {
-            console.log('🎉 Login streak achievements unlocked:', unlocked)
-          }
-        } else if (streakErr) {
-          console.error('compute_login_streak error:', streakErr)
-        }
-      } catch (e) {
-        console.error('Login streak tracking failed:', e)
-      }
-      
       // Load user's trainers and auto-select the first one
       const userTrainers = await loadTrainers(data.id)
       if (userTrainers.length > 0) {
         const trainer = userTrainers[0]
         setCurrentTrainer(trainer)
         currentTrainerRef.current = trainer
+        
+        // Initialize user stats and update login streak
+        await initializeUserStats(data.id, trainer.id)
+        await updateLoginStreak(data.id, trainer.id)
+        
         const pokemonData = await loadPokemonInventory(trainer.id)
-        sendTrainerToGame(trainer.name)
-        sendPokemonInventoryToGame(pokemonData)
+        await sendTrainerToGame(trainer.name)
+        await sendPokemonInventoryToGame(pokemonData)
         setOutput(`✅ Welcome back, ${data.username}! Trainer "${trainer.name}" selected with ${pokemonData.length} Pokemon.`)
       } else {
         setOutput(`✅ Welcome back, ${data.username}! No trainer found for your account.`)
@@ -366,18 +363,26 @@ print("Ready to start your adventure!")`)
   //   }
   // }
 
-  function handleGodotMessage(data: any) {
+  async function handleGodotMessage(data: any) {
     if (data.type === 'BATTLE_STARTED') {
+      console.log('Received BATTLE_STARTED event from Godot:', data)
+      console.log('🌍 Battle data region:', data.data?.region, 'Full data:', data.data)
       setGameStatus('battle')
       setCurrentBattlePokemon(data.data)
       setIsTaskActive(true)
       taskCompletionSentRef.current = false // Reset flag for new battle
-      loadRandomTask()
+      // Store the current battle region for achievement tracking
+      const battleRegion = data.data?.region || 'Forest'
+      console.log('🌍 Setting battle region to:', battleRegion)
+      setCurrentBattleRegion(battleRegion)
+      // Pass the region from the battle data to get region-specific tasks
+      loadRandomTask(data.data?.region || null)
     } else if (data.type === 'BATTLE_ENDED') {
       setGameStatus('menu')
       setIsTaskActive(false)
       setCurrentTask(null)
       setCurrentBattlePokemon(null)
+      setCurrentBattleRegion(null) // Clear battle region
       taskCompletionSentRef.current = false // Reset flag
       setCode(`# PyMon Creature Collector
 # 
@@ -399,6 +404,7 @@ print("Ready to start your adventure!")`)
       setIsTaskActive(false)
       setCurrentTask(null)
       setCurrentBattlePokemon(null)
+      setCurrentBattleRegion(null) // Clear battle region
       taskCompletionSentRef.current = false
       setCode(`# PyMon Creature Collector
 # 
@@ -432,8 +438,8 @@ print("Ready to start your adventure!")`)
           const pokemonData = await loadPokemonInventory(trainer.id)
           
           // Send trainer and inventory to game
-          sendTrainerToGame(trainer.name)
-          sendPokemonInventoryToGame(pokemonData)
+          await sendTrainerToGame(trainer.name)
+          await sendPokemonInventoryToGame(pokemonData)
           
           setOutput(`Game started! Trainer ${trainer.name} loaded with ${pokemonData.length} Pokemon.`)
         } else {
@@ -444,9 +450,9 @@ print("Ready to start your adventure!")`)
     } else if (data.type === 'request_current_trainer') {
       // Send current trainer to Godot, or load CSV data if no trainer exists
       if (currentTrainer) {
-        sendTrainerToGame(currentTrainer.name)
+        await sendTrainerToGame(currentTrainer.name)
         if (pokemonInventory.length > 0) {
-          sendPokemonInventoryToGame(pokemonInventory)
+          await sendPokemonInventoryToGame(pokemonInventory)
         }
       } else {
         getFirstTrainer().then((trainer: any) => {
@@ -467,6 +473,8 @@ print("Ready to start your adventure!")`)
 
   // Handle Pokemon capture from Godot
   async function handlePokemonCapture(captureData: any) {
+    console.log('📦 Full capture data:', captureData)
+    
     // Use ref as fallback since state might not be updated yet
     const trainer = currentTrainerRef.current || currentTrainer
     
@@ -482,6 +490,10 @@ print("Ready to start your adventure!")`)
       captured_at: captureData.data?.captured_at || captureData.captured_at || new Date().toISOString(),
       capture_time_ms: captureData.data?.capture_time_ms || captureData.capture_time_ms || null
     }
+    
+    // Extract region from capture data
+    const captureRegion = captureData.data?.region || captureData.region || currentBattleRegion || 'Forest'
+    console.log('🗺️ Capture region:', captureRegion, 'from data:', captureData.data?.region || captureData.region, 'or state:', currentBattleRegion)
 
     // Extract time bonus info if available
     const basePoints = captureData.data?.base_points || null
@@ -510,12 +522,41 @@ print("Ready to start your adventure!")`)
       
       setOutput(outputMessage)
       
+      // Update achievement stats for this capture
+      // Use ref since state might not be updated yet
+      const appUser = currentAppUserRef.current || currentAppUser
+      
+      console.log('🔍 Achievement tracking check:', { 
+        appUser: appUser,
+        appUserFromState: currentAppUser,
+        appUserFromRef: currentAppUserRef.current,
+        hasAppUser: !!appUser?.id, 
+        hasTrainer: !!trainer?.id,
+        hasRegion: !!captureRegion,
+        appUserId: appUser?.id,
+        trainerId: trainer?.id,
+        region: captureRegion
+      })
+      
+      if (appUser?.id && captureRegion) {
+        console.log('🎯 Tracking achievement for capture in region:', captureRegion)
+        await updateCaptureStats(appUser.id, trainer.id, captureRegion)
+        console.log('✅ Achievement stats updated successfully!')
+      } else {
+        console.warn('⚠️ Cannot track achievement - missing data:', { 
+          hasUserId: !!appUser?.id, 
+          hasTrainerId: !!trainer?.id, 
+          region: captureRegion,
+          note: !appUser?.id ? 'User not logged in - appUser is null' : 'Missing region data'
+        })
+      }
+      
       // Refresh the inventory display
       await loadPokemonInventory(trainer.id)
       
       // Send updated inventory to game
       const updatedInventory = await loadPokemonInventory(trainer.id)
-      sendPokemonInventoryToGame(updatedInventory)
+      await sendPokemonInventoryToGame(updatedInventory)
       
       // Refresh leaderboard after capture
       await loadLeaderboard()
@@ -574,11 +615,11 @@ print("Ready to start your adventure!")`)
   }
 
   // Load a random programming task from database
-  async function loadRandomTask() {
+  async function loadRandomTask(region: string | null = null) {
     try {
-      console.log('Loading random task...')
+      console.log('Loading random task for region:', region)
       const { data, error } = await supabase
-        .rpc('get_random_task')
+        .rpc('get_random_task', { task_category: region })
       
       console.log('Task data:', data)
       console.log('Task error:', error)
@@ -596,10 +637,10 @@ print("Ready to start your adventure!")`)
         console.log('Task loaded:', task)
         setCurrentTask(task)
         setCode(task.starter_code || '')
-        setOutput(`Task: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
+        setOutput(`Region: ${region || 'Any'} \n\nTask: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
       } else {
-        console.warn('No tasks found in database')
-        setOutput('❌ No tasks available in database. Please run the migration script.')
+        console.warn('No tasks found in database for region:', region)
+        setOutput('❌ No tasks available for this region. Please run the database migration.')
         setIsTaskActive(false)
       }
     } catch (error: any) {
@@ -688,22 +729,56 @@ print("Ready to start your adventure!")`)
     }
   }
 
-  function sendTrainerToGame(trainerName: string) {
+  async function sendTrainerToGame(trainerName: string) {
     const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
     if (gameFrame && gameFrame.contentWindow) {
+      // Get the trainer's total_points from leaderboard view (includes pokemon + achievement points)
+      const trainer = currentTrainerRef.current || currentTrainer
+      let totalPoints = 0
+      
+      if (trainer?.id) {
+        const { data, error } = await supabase
+          .from('trainer_leaderboard')
+          .select('total_points')
+          .eq('id', trainer.id)
+          .single()
+        
+        console.log('📊 sendTrainerToGame - Query result:', data, 'Error:', error)
+        totalPoints = data?.total_points || 0
+        console.log('📊 sendTrainerToGame - Sending total_points:', totalPoints)
+      }
+      
       gameFrame.contentWindow.postMessage({
         type: 'TRAINER_SELECTED',
-        trainer_name: trainerName
+        trainer_name: trainerName,
+        total_points: totalPoints
       }, '*')
     }
   }
 
-  function sendPokemonInventoryToGame(pokemonData: any[]) {
+  async function sendPokemonInventoryToGame(pokemonData: any[]) {
     const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
     if (gameFrame && gameFrame.contentWindow) {
+      // Get the trainer's total_points from leaderboard view (includes pokemon + achievement points)
+      const trainer = currentTrainerRef.current || currentTrainer
+      let totalPoints = 0
+      
+      if (trainer?.id) {
+        const { data, error } = await supabase
+          .from('trainer_leaderboard')
+          .select('total_points')
+          .eq('id', trainer.id)
+          .single()
+        
+        console.log('📊 sendPokemonInventoryToGame - Query result:', data, 'Error:', error)
+        totalPoints = data?.total_points || 0
+        console.log('📊 sendPokemonInventoryToGame - Sending total_points:', totalPoints, 'Pokemon count:', pokemonData.length)
+      }
+      
       gameFrame.contentWindow.postMessage({
         type: 'POKEMON_INVENTORY_UPDATE',
-        pokemon_data: pokemonData
+        pokemon_data: pokemonData,
+        total_points: totalPoints
       }, '*')
     }
   }
@@ -737,12 +812,13 @@ print("Ready to start your adventure!")`)
           <button
             onClick={() => {
               setCurrentAppUser(null)
+              currentAppUserRef.current = null
               setAppView('main')
               setOutput('Playing as guest')
             }}
             className="guest-login-button"
           >
-            🚀 Skip Login - Play as Guest
+            Skip Login - Play as Guest
           </button>
         </div>
       </div>
@@ -764,6 +840,7 @@ print("Ready to start your adventure!")`)
           
           if (data) {
             setCurrentAppUser(data)
+            currentAppUserRef.current = data
 
             // Record first login for streak & unlock streak achievements
             try {
@@ -796,8 +873,8 @@ print("Ready to start your adventure!")`)
               setCurrentTrainer(trainer)
               currentTrainerRef.current = trainer
               const pokemonData = await loadPokemonInventory(trainer.id)
-              sendTrainerToGame(trainer.name)
-              sendPokemonInventoryToGame(pokemonData)
+              await sendTrainerToGame(trainer.name)
+              await sendPokemonInventoryToGame(pokemonData)
               setOutput(`🎉 Account created! Welcome, ${username}! Trainer "${trainer.name}" ready!`)
             } else {
               setOutput(`🎉 Account created! Welcome, ${username}!`)
@@ -826,6 +903,7 @@ print("Ready to start your adventure!")`)
             await usageSession.endSession()
           }
           setCurrentAppUser(null)
+          currentAppUserRef.current = null
           setCurrentTrainer(null)
           setAppView('welcome')
           setOutput('👋 Logged out')
@@ -836,41 +914,55 @@ print("Ready to start your adventure!")`)
 
   // Main game view (the existing game UI)
   return (
-    <div className={`app-container ${currentAppUser ? 'with-user-bar' : ''}`}>
+    <div className="app-container with-user-bar">
       {/* User Info Bar */}
-      {currentAppUser && (
-        <div className="user-info-bar">
-          <span className="trainer-username">Trainer: {currentAppUser.username}</span>
-          <div className="user-bar-buttons">
+      <div className="user-info-bar">
+        <span className="trainer-username">
+          {currentAppUser ? `Trainer: ${currentAppUser.username}` : 'Playing as Guest'}
+        </span>
+        <div className="user-bar-buttons">
+          <button
+            onClick={() => setShowReferences(true)}
+            className="references-button"
+          >
+            References
+          </button>
+          <button
+            onClick={() => setShowExamples(true)}
+            className="examples-button"
+          >
+            Examples
+          </button>
+          {currentAppUser && (
             <button
-              onClick={() => setShowReferences(true)}
-              className="references-button"
+              onClick={() => setShowMilestones(true)}
+              className="milestones-button"
             >
-              References
+              Milestones
             </button>
-            <button
-              onClick={() => setShowExamples(true)}
-              className="examples-button"
-            >
-              Examples
-            </button>
-            <button
-              onClick={async () => {
+          )}
+          <button
+            onClick={async () => {
+              if (currentAppUser) {
                 // End usage session before logout
                 if (usageSession.sessionActive) {
                   await usageSession.endSession()
                 }
                 setCurrentAppUser(null)
+                currentAppUserRef.current = null
                 setCurrentTrainer(null)
                 setAppView('welcome')
-              }}
-              className="logout-button"
-            >
-              Logout
-            </button>
-          </div>
+              } else {
+                // Guest mode - go to login
+                setAppView('welcome')
+              }
+            }}
+            className={currentAppUser ? "logout-button" : "login-button"}
+          >
+            {currentAppUser ? 'Logout' : 'Login'}
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Left Side - Game Only */}
       <div className="left-panel">
@@ -983,6 +1075,13 @@ print("Ready to start your adventure!")`)
 
       {/* Examples Modal */}
       <ExamplesModal show={showExamples} onClose={() => setShowExamples(false)} />
+      
+      {/* Milestones Modal */}
+      <MilestonesModal 
+        show={showMilestones} 
+        onClose={() => setShowMilestones(false)}
+        userId={currentAppUser?.id || null}
+      />
     </div>
   )
 }

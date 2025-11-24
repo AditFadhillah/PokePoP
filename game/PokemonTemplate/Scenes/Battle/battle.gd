@@ -287,7 +287,8 @@ func _on_animation_player_animation_finished(anim_name):
 			JSBridge.send_message_to_react("BATTLE_STARTED", {
 				"message": "in battle",
 				"pokemon_name": current_pokemon,
-				"pokemon_level": enemy.current_pokemon_level
+				"pokemon_level": enemy.current_pokemon_level,
+				"region": current_region
 			})
 
 func on_enemy_turn():

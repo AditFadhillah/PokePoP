@@ -12,7 +12,7 @@ var welcome_scene = preload("res://Scenes/UI/welcome_display.tscn")
 
 # Sign messages dictionary - maps tile coordinates to messages
 var sign_messages = {
-	Vector2i(2, 2): "Welcome to Flower Village!",
+	Vector2i(2, 2): "Welcome to Flower Village!\nTasks: Basic Loops",
 	Vector2i(15, 9): "Check Tall Grass to find Pokemons!",
 	Vector2i(12, 14): "Every region has different unique Pokemons!",
 	Vector2i(18, 2): "Twin Lotus Pond",
@@ -23,21 +23,21 @@ var sign_messages = {
 	Vector2i(17, 18): "Probably shouldn't enter a strangers house",
 	Vector2i(3, 14): "It's a tree",
 
-	Vector2i(38, 9): "Welcome to Sunny Beach",
+	Vector2i(38, 9): "Welcome to Sunny Beach\nTasks: Dictionaries",
 	Vector2i(40, 14): "Check Washed-up Seaweed to find Pokemons!",
 	Vector2i(47, 7): "Beautiful sand castle, careful not to step on it!",
 	Vector2i(48, 7): "Beautiful sand castle, careful not to step on it!",
 	Vector2i(48, 12): "Beautiful sand castle, careful not to step on it!",
 	Vector2i(35, 14): "It's a palm tree",
 	
-	Vector2i(40, 30): "Welcome to Mangrove Swamp",
+	Vector2i(40, 30): "Welcome to Mangrove Swamp\nTasks: Tuples",
 	Vector2i(40, 28): "Check Tall Grass to find Pokemons!",
 	Vector2i(44, 32): "The cave is blocked off",
 	Vector2i(47, 35): "Overgrown plants blocks the entrance",
 	Vector2i(36, 37): "It's a scary cave, luckily it's blocked off",
 	Vector2i(34, 33): "It's a tree",
 
-	Vector2i(15, 29): "Welcome to Barren Volcano",
+	Vector2i(15, 29): "Welcome to Barren Volcano\nTasks: Regular Expressions",
 	Vector2i(17, 29): "Check Rocks with Orange Crystals to find Pokemons!",
 	Vector2i(18, 32): "LAVA LAKE AHEAD, WALK WITH CAUTION!",
 	Vector2i(20, 29): "It's a big rock",
@@ -74,9 +74,9 @@ func _on_trainer_updated_from_react(trainer_name: String):
 	GameManager.set_trainer_name(trainer_name)
 	setup_trainer_name()
 
-func _on_pokemon_inventory_updated_from_react(pokemon_data: Array):
-	# Handle Pokemon inventory update from React app
-	GameManager.load_pokemon_from_external_data(pokemon_data)
+func _on_pokemon_inventory_updated_from_react(pokemon_data: Array, total_points: int):
+	# Handle Pokemon inventory update from React app with total points from database
+	GameManager.load_pokemon_from_external_data(pokemon_data, total_points)
 
 func setup_trainer_name():
 	# Get trainer name from GameManager
