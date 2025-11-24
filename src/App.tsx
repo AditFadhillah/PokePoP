@@ -275,6 +275,30 @@ print("Ready to start your adventure!")`)
       setAuthMessage(null)
       setLoginUsername('')
       setLoginPassword('')
+
+      // Record login event and unlock login streak achievements
+      try {
+        await supabase.from('login_events').insert({ username: data.username })
+        const { data: streak, error: streakErr } = await supabase.rpc('compute_login_streak', {
+          p_username: data.username
+        })
+        if (!streakErr && streak != null) {
+          const { data: unlocked, error: unlockErr } = await supabase.rpc('check_achievements', {
+            p_username: data.username,
+            p_metric: 'login_streak_days',
+            p_value: streak
+          })
+          if (unlockErr) {
+            console.error('Login streak achievement check error:', unlockErr)
+          } else if (unlocked && unlocked.length > 0) {
+            console.log('🎉 Login streak achievements unlocked:', unlocked)
+          }
+        } else if (streakErr) {
+          console.error('compute_login_streak error:', streakErr)
+        }
+      } catch (e) {
+        console.error('Login streak tracking failed:', e)
+      }
       
       // Load user's trainers and auto-select the first one
       const userTrainers = await loadTrainers(data.id)
@@ -740,7 +764,31 @@ print("Ready to start your adventure!")`)
           
           if (data) {
             setCurrentAppUser(data)
-            
+
+            // Record first login for streak & unlock streak achievements
+            try {
+              await supabase.from('login_events').insert({ username })
+              const { data: streak, error: streakErr } = await supabase.rpc('compute_login_streak', {
+                p_username: username
+              })
+              if (!streakErr && streak != null) {
+                const { data: unlocked, error: unlockErr } = await supabase.rpc('check_achievements', {
+                  p_username: username,
+                  p_metric: 'login_streak_days',
+                  p_value: streak
+                })
+                if (unlockErr) {
+                  console.error('Signup login streak achievement check error:', unlockErr)
+                } else if (unlocked && unlocked.length > 0) {
+                  console.log('🎉 Signup streak achievements unlocked:', unlocked)
+                }
+              } else if (streakErr) {
+                console.error('compute_login_streak error:', streakErr)
+              }
+            } catch (e) {
+              console.error('Signup streak tracking failed:', e)
+            }
+
             // Load user's trainer (should be the one just created)
             const userTrainers = await loadTrainers(data.id)
             if (userTrainers.length > 0) {
@@ -754,7 +802,7 @@ print("Ready to start your adventure!")`)
             } else {
               setOutput(`🎉 Account created! Welcome, ${username}!`)
             }
-            
+
             setAppView('dashboard')
           }
         }}

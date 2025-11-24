@@ -58,3 +58,5 @@ export async function runPython(pyodide: any, code: string): Promise<string> {
     return '❌ Error: ' + err.message;
   }
 }
+
+

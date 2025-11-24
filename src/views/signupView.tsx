@@ -13,9 +13,18 @@ export default function SignupView({ onBack, onSuccess }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Post-signup Survey Extract URL
+  const SURVEY_URL = 'https://www.survey-xact.dk/LinkCollector?key=6TW449XRSK9P'
+
+  // After signup we show the survey before letting the user continue
+  const [showSurvey, setShowSurvey] = useState(false)
+  const [surveyCompleted, setSurveyCompleted] = useState(false)
+  const [signedUpUsername, setSignedUpUsername] = useState<string | null>(null)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -56,8 +65,11 @@ export default function SignupView({ onBack, onSuccess }: Props) {
         // Continue anyway - user account was created
       }
 
-      // Success!
-      onSuccess(username)
+      // Signup succeeded. Now show survey before continuing into the app.
+      setSignedUpUsername(username)
+      setShowSurvey(true)
+      setLoading(false)
+      return
     } catch (err: any) {
       setError('Signup error: ' + err.message)
       setLoading(false)
@@ -68,14 +80,15 @@ export default function SignupView({ onBack, onSuccess }: Props) {
     <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <div style={{ width: 400, padding: 24, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
         <h2 style={{ marginTop: 0 }}>Create Account</h2>
-        
+
         {error && (
           <div style={{ padding: 10, marginBottom: 16, background: '#fee', border: '1px solid #fcc', borderRadius: 6, color: '#c00' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        {!showSurvey && (
+          <form onSubmit={handleSubmit}>
           <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 4 }}>Username</label>
           <input
             type="text"
@@ -120,6 +133,39 @@ export default function SignupView({ onBack, onSuccess }: Props) {
             </button>
           </div>
         </form>
+        )}
+
+        {showSurvey && signedUpUsername && (
+          <div style={{ marginTop: 16 }}>
+            <h3 style={{ margin: '8px 0' }}>One more step</h3>
+            <p style={{ fontSize: 13, color: '#374151', marginTop: 0 }}>
+              Please complete this survey to finish setting up your account.
+            </p>
+            <div style={{ width: '100%', height: 400, border: '1px solid #e5e7eb', borderRadius: 6, overflow: 'hidden', marginBottom: 8 }}>
+              <iframe
+                src={SURVEY_URL}
+                title="Post-signup Survey"
+                style={{ width: '100%', height: '100%', border: 0 }}
+              />
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#111827', marginBottom: 12 }}>
+              <input
+                type="checkbox"
+                checked={surveyCompleted}
+                onChange={(e) => setSurveyCompleted(e.target.checked)}
+              />
+              I have completed the survey.
+            </label>
+            <button
+              type="button"
+              disabled={!surveyCompleted}
+              onClick={() => onSuccess(signedUpUsername)}
+              style={{ width: '100%', padding: 10, border: 'none', borderRadius: 6, background: surveyCompleted ? '#10b981' : '#d1d5db', color: surveyCompleted ? 'white' : '#6b7280', cursor: surveyCompleted ? 'pointer' : 'not-allowed' }}
+            >
+              Continue
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

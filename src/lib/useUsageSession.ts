@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { dbHelpers } from './supabase'
+import { supabase, dbHelpers } from './supabase'
 
 /**
  * Custom hook to track and manage user usage sessions
@@ -87,7 +87,33 @@ export function useUsageSession(username: string | null, metadata: any = {}) {
 
         if (error) {
           console.error('Failed to update heartbeat:', error)
-        } 
+        }
+        // After a successful heartbeat, recompute total active minutes and unlock duration achievements
+        if (!error && username) {
+          try {
+            const { data: mins, error: minsErr } = await supabase.rpc('get_total_active_minutes', {
+              p_username: username
+            })
+
+            if (!minsErr && typeof mins === 'number') {
+              const { data: unlocked, error: unlockErr } = await supabase.rpc('check_achievements', {
+                p_username: username,
+                p_metric: 'active_minutes',
+                p_value: mins
+              })
+
+              if (unlockErr) {
+                console.error('Duration achievement check error:', unlockErr)
+              } else if (unlocked && unlocked.length > 0) {
+                console.log('🎉 Duration achievements unlocked:', unlocked)
+              }
+            } else if (minsErr) {
+              console.error('get_total_active_minutes error:', minsErr)
+            }
+          } catch (e) {
+            console.error('Duration achievement check failed:', e)
+          }
+        }
         // else {
         //   console.log('💓 Heartbeat sent - Active time:', Math.floor(activeTimeRef.current / 1000), 's')
         // }
