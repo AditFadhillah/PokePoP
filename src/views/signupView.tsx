@@ -78,8 +78,8 @@ export default function SignupView({ onBack, onSuccess }: Props) {
   }
 
   return (
-    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-      <div style={{ width: 400, padding: 24, border: '1px solid #ddd', borderRadius: 8, background: '#fff' }}>
+    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundImage: 'url(/PyMon/Background_login.png)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+      <div style={{ width: 400, padding: 24, border: '1px solid #ddd', borderRadius: 8, background: 'rgba(255, 255, 255, 0.95)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)' }}>
         <h2 style={{ marginTop: 0 }}>Create Account</h2>
 
         {error && (
