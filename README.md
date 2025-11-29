@@ -166,6 +166,9 @@ git show HEAD
 git add .
 git commit -m "Fix background in login"
 
+# Push to origin main
+gitpush origin main
+
 # Push to neurogen backup
 git push neurogen ready
 
