@@ -164,7 +164,7 @@ git show HEAD
 # Production branch: main (auto-deployed to gh-pages)
 
 git add .
-git commit -m "TEST"
+git commit -m "Fix background in login"
 
 # Push to neurogen backup
 git push neurogen ready
