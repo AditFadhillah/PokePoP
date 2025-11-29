@@ -6,6 +6,7 @@ signal trainer_updated_from_js(trainer_name: String)
 signal pokemon_inventory_updated_from_js(pokemon_data: Array, total_points: int)
 signal capture_triggered_from_js(pokemon_data: Dictionary)
 signal task_completed_from_js(task_completed: bool)
+signal mute_audio_from_js(mute: bool)
 
 func _ready():
 	# Only setup JavaScript bridge if running in web export
@@ -50,6 +51,14 @@ func setup_js_bridge():
 				};
 				console.log('Stored in pendingTaskCompletion:', window.godot_js_bridge.pendingTaskCompletion);
 			}
+		} else if (event.data && event.data.type === 'MUTE_AUDIO') {
+			if (window.godot_js_bridge) {
+				window.godot_js_bridge.pendingMute = true;
+			}
+		} else if (event.data && event.data.type === 'UNMUTE_AUDIO') {
+			if (window.godot_js_bridge) {
+				window.godot_js_bridge.pendingMute = false;
+			}
 		}
 	});
 	
@@ -60,6 +69,7 @@ func setup_js_bridge():
 		pendingInventoryUpdate: null,
 		pendingCapturetrigger: null,
 		pendingTaskCompletion: null,
+		pendingMute: undefined,
 		sendMessageToReact: function(message) {
 			window.parent.postMessage({
 				type: 'GODOT_MESSAGE',
@@ -219,6 +229,24 @@ func _check_js_messages():
 				var completed = task_data.get("completed", false)
 				print("✅ Task completion received from JS: ", completed)
 				task_completed_from_js.emit(completed)
+	
+	# Check for mute/unmute
+	var mute_check = """
+	if (window.godot_js_bridge && typeof window.godot_js_bridge.pendingMute !== 'undefined') {
+		var mute = window.godot_js_bridge.pendingMute;
+		window.godot_js_bridge.pendingMute = undefined;
+		mute;
+	} else {
+		null;
+	}
+	"""
+	
+	var mute_result = JavaScriptBridge.eval(mute_check)
+	if mute_result != null:
+		print("🔇 Mute signal received: ", mute_result)
+		# Update global mute state
+		GameManager.set_muted(mute_result)
+		mute_audio_from_js.emit(mute_result)
 
 func simulate_enter_key():
 	# Create an input event for Enter key

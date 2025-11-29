@@ -22,10 +22,11 @@ var is_dialog_finished = false
 var is_menu_visible = false
 var begin_battle = false
 var capture_in_progress = false  # Flag to prevent input during capture
+var auto_hide_timer: Timer  # Timer to auto-hide dialog after 3 seconds
 
 # Battle timer variables
-var battle_timer = 600.0	# 10 minutes
-var time_remaining = 600.0
+var battle_timer = 900.0	# 15 minutes
+var time_remaining = 900.0
 var timer_active = false
 var timer_label: Label
 var battle_start_time: int = 0  # Track when battle started (in milliseconds)
@@ -52,9 +53,17 @@ func _ready():
 	SignalManager.connect("enemy_dead", on_enemy_dead)
 	SignalManager.connect("player_dead", on_player_dead)
 	
-	# Connect to JSBridge for task completion
+	# Connect to JSBridge for task completion and mute
 	if JSBridge:
 		JSBridge.task_completed_from_js.connect(_on_task_completed)
+		JSBridge.mute_audio_from_js.connect(_on_mute_audio_from_js)
+	
+	# Create auto-hide timer for dialog
+	auto_hide_timer = Timer.new()
+	auto_hide_timer.wait_time = 3.0
+	auto_hide_timer.one_shot = true
+	auto_hide_timer.timeout.connect(_on_auto_hide_timeout)
+	add_child(auto_hide_timer)
 	
 	# Create timer label
 	create_timer_label()
@@ -74,7 +83,19 @@ func _ready():
 	anim.play("fade_in")
 	dialog_box.visible = true
 	dialog.visible = false	
+	
+	# Add to music group for global mute control
+	$BattleMusic.add_to_group("music")
+	
 	$BattleMusic.play()
+	
+	# Apply mute state immediately if already muted
+	if GameManager.is_audio_muted():
+		$BattleMusic.volume_db = -80.0
+		print("🔇 Battle music muted on start (from GameManager), volume_db: ", $BattleMusic.volume_db)
+	else:
+		$BattleMusic.volume_db = 0.0
+		print("🔊 Battle music unmuted on start, volume_db: ", $BattleMusic.volume_db)
 
 func create_timer_label():
 	# Timer label creation (kept hidden from player, only console logs visible)
@@ -118,6 +139,9 @@ func _process(delta):
 		
 	if Input.is_action_just_pressed("ui_accept") and !is_menu_visible and !capture_in_progress and enemy.hp > 0:
 		if is_dialog_finished:
+			# Stop auto-hide timer if player manually advances
+			if auto_hide_timer:
+				auto_hide_timer.stop()
 			dialog.visible = false
 			dialog_box.visible = false
 			click_to_continue.visible = false
@@ -200,7 +224,22 @@ func next_text() -> void:
 	is_dialog_finished = true
 	text_num += 1
 	
+	# Start auto-hide timer when dialog finishes
+	if auto_hide_timer:
+		auto_hide_timer.start()
+	
 	return
+
+func _on_auto_hide_timeout():
+	# Auto-hide dialog after 3 seconds
+	if is_dialog_finished and !is_menu_visible and !capture_in_progress:
+		dialog.visible = false
+		dialog_box.visible = false
+		click_to_continue.visible = false
+		anim.play("hide")
+		menu.visible = true
+		is_menu_visible = true
+		attack_btn.grab_focus()
 
 func _on_task_completed(completed: bool):
 	# Called when React sends task completion result
@@ -302,3 +341,13 @@ func on_player_animation_finished():
 func on_enemy_animation_finished():
 	# No longer needed for capture system
 	pass
+
+func _on_mute_audio_from_js(mute: bool):
+	# Update global state (already done by JSBridge, but ensure it's applied)
+	GameManager.set_muted(mute)
+	if mute:
+		$BattleMusic.volume_db = -80.0
+		print("🔇 Battle music muted via signal, volume_db: ", $BattleMusic.volume_db)
+	else:
+		$BattleMusic.volume_db = 0.0
+		print("🔊 Battle music unmuted via signal, volume_db: ", $BattleMusic.volume_db)

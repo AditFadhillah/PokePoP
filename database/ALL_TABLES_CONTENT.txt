@@ -1,0 +1,355 @@
+----------------------------
+achievements
+Name	Format	Type
+id	
+uuid
+string
+
+achievement_key	
+text
+string
+
+title	
+text
+string
+
+description	
+text
+string
+
+category	
+text
+string
+
+requirement_value	
+integer
+number
+
+icon	
+text
+string
+
+created_at	
+timestamp with time zone
+string	
+
+points	
+integer
+number	
+
+----------------------------
+pokemon_inventory
+Name	Format	Type	Description
+id	
+uuid
+string
+
+trainer_id	
+uuid
+string
+
+pokemon_name	
+text
+string
+
+level	
+integer
+number
+
+points	
+integer
+number
+
+captured_at	
+timestamp with time zone
+string
+
+capture_time_ms	
+bigint
+number	Time taken to capture the Pokemon in milliseconds (from battle start to successful capture)
+
+----------------------------
+programming_tasks
+Name	Format	Type	Description
+id	
+uuid
+string
+
+title	
+text
+string
+
+description	
+text
+string
+
+starter_code	
+text
+string
+
+expected_output	
+text
+string
+
+test_cases	
+jsonb
+json
+
+created_at	
+timestamp with time zone
+string
+
+updated_at	
+timestamp with time zone
+string
+
+category	
+text
+string
+
+----------------------------
+test_username
+Description: for login page testing
+
+Name	Format	Type
+username	
+character varying
+string
+
+password	
+character varying
+string
+
+id	
+uuid
+string
+
+----------------------------
+trainer_leaderboard
+Name	Format	Type
+id	
+uuid
+string
+
+name	
+text
+string
+
+user_id	
+uuid
+string
+
+pokemon_points	
+bigint
+number
+
+achievement_points	
+integer
+number
+
+total_points	
+bigint
+number
+
+pokemon_count	
+bigint
+number
+
+created_at	
+timestamp with time zone
+string
+
+updated_at	
+timestamp with time zone
+string
+
+----------------------------
+trainers
+Name	Format	Type	Description
+id	
+uuid
+string
+
+user_id	
+uuid
+string	References test_username.id (simple username/password auth)
+
+name	
+text
+string
+
+total_points	
+integer
+number
+
+created_at	
+timestamp with time zone
+string
+
+updated_at	
+timestamp with time zone
+string
+
+test_user_id	
+uuid
+string	References test_username.id (simple username/password auth)
+
+achievement_points	
+integer
+number
+
+----------------------------
+usage_session_stats
+Name	Format	Type
+username	
+text
+string
+
+total_sessions	
+bigint
+number
+
+total_active_ms	
+numeric
+number
+
+avg_active_ms	
+numeric
+number
+
+max_active_ms	
+bigint
+number
+
+min_active_ms	
+bigint
+number
+
+last_activity	
+timestamp with time zone
+string
+
+active_sessions	
+bigint
+number
+
+----------------------------
+usage_sessions
+Description: Tracks user session activity including start time, heartbeats, and total active time
+
+Name	Format	Type	Description
+id	
+uuid
+string
+
+username	
+text
+string
+
+meta	
+jsonb
+json	JSON metadata about the session (e.g., app version, features used, etc.)
+
+started_at	
+timestamp with time zone
+string
+
+last_beat_at	
+timestamp with time zone
+string	Last heartbeat timestamp to track session liveness
+
+ended_at	
+timestamp with time zone
+string
+
+active_ms	
+bigint
+number	Total active time in milliseconds for this session
+
+created_at	
+timestamp with time zone
+string
+
+----------------------------
+user_achievements
+Name	Format	Type
+id	
+uuid
+string
+
+user_id	
+uuid
+string
+
+trainer_id	
+uuid
+string
+
+achievement_id	
+uuid
+string
+
+unlocked_at	
+timestamp with time zone
+string
+
+----------------------------
+user_stats
+Name	Format	Type
+id	
+uuid
+string
+
+user_id	
+uuid
+string
+
+trainer_id	
+uuid
+string
+
+total_captures	
+integer
+number
+
+forest_captures	
+integer
+number
+
+beach_captures	
+integer
+number
+
+volcano_captures	
+integer
+number
+
+swamp_captures	
+integer
+number
+
+current_login_streak	
+integer
+number
+
+longest_login_streak	
+integer
+number
+
+last_login_date	
+date
+string
+
+total_duration_minutes	
+integer
+number
+
+longest_session_minutes	
+integer
+number
+
+updated_at	
+timestamp with time zone
+string
+
+------------------------

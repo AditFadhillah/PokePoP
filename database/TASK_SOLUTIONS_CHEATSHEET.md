@@ -43,7 +43,7 @@ def count_vowels(text):
     return count
 
 result = count_vowels('hello world')
-print(result)  # Output: 5
+print(result)  # Output: 3
 ```
 
 ---
@@ -381,7 +381,7 @@ for i in range(21):
         evens.append(i)
 
 # Method 2: List comprehension
-evens = [i for i in range(21) if i % 2 == 0]
+evens = [i for i in range(21) if i % 2 == 0]    
 
 # Method 3: Using range step
 evens = list(range(0, 21, 2))

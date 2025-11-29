@@ -31,19 +31,27 @@ export default function MilestonesModal({ show, onClose, userId }: MilestonesMod
   async function loadAchievements() {
     try {
       setLoading(true)
+      console.log('🔍 MilestonesModal: Loading achievements for userId:', userId)
+      
       const { data, error } = await supabase
         .rpc('get_user_achievements', { p_user_id: userId })
       
       if (error) {
-        console.error('Error loading achievements:', error)
+        console.error('❌ MilestonesModal: Error loading achievements:', error)
+        console.error('   - userId passed:', userId)
+        console.error('   - error details:', error.message)
         return
       }
       
       if (data) {
+        console.log('✅ MilestonesModal: Loaded', data.length, 'achievements')
+        console.log('   - Achievements:', data)
         setAchievements(data)
+      } else {
+        console.log('⚠️ MilestonesModal: No achievements data returned')
       }
     } catch (error) {
-      console.error('Error loading achievements:', error)
+      console.error('❌ MilestonesModal: Exception:', error)
     } finally {
       setLoading(false)
     }

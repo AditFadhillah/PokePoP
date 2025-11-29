@@ -62,7 +62,7 @@ autoplay = "start"
 
 [node name="Music" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_7tuw6")
-volume_db = -10.0
+volume_db = -30.0
 
 [node name="TextureRect" type="TextureRect" parent="."]
 layout_mode = 0

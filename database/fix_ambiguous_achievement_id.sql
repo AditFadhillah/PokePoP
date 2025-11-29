@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION check_and_award_achievements(
     p_trainer_id UUID
 )
 RETURNS TABLE (
-    achievement_id UUID,
+    unlocked_achievement_id UUID,
     achievement_key TEXT,
     title TEXT,
     description TEXT,
@@ -17,9 +17,10 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_total_achievement_points INTEGER;
+    v_total_achievement_points INTEGER := 0;
+    v_unlocked_ids UUID[];
 BEGIN
-    RETURN QUERY
+    -- Find and insert eligible achievements, capture the IDs
     WITH stats AS (
         SELECT * FROM user_stats WHERE user_id = p_user_id
     ),
@@ -57,22 +58,26 @@ BEGIN
         INSERT INTO user_achievements (user_id, trainer_id, achievement_id)
         SELECT p_user_id, p_trainer_id, ea.id
         FROM eligible_achievements ea
-        RETURNING achievement_id as unlocked_achievement_id
+        RETURNING achievement_id
     )
+    SELECT ARRAY_AGG(achievement_id) INTO v_unlocked_ids FROM newly_unlocked;
+    
+    -- Calculate total achievement points
+    SELECT COALESCE(SUM(a.points), 0) INTO v_total_achievement_points
+    FROM achievements a
+    WHERE a.id = ANY(v_unlocked_ids);
+    
+    -- Return the unlocked achievements
+    RETURN QUERY
     SELECT 
-        a.id as achievement_id,
+        a.id as unlocked_achievement_id,
         a.achievement_key,
         a.title,
         a.description,
         a.icon,
         a.points
-    FROM newly_unlocked nu
-    JOIN achievements a ON a.id = nu.unlocked_achievement_id;
-    
-    -- Calculate total achievement points to add
-    SELECT COALESCE(SUM(a.points), 0) INTO v_total_achievement_points
-    FROM newly_unlocked nu
-    JOIN achievements a ON a.id = nu.unlocked_achievement_id;
+    FROM achievements a
+    WHERE a.id = ANY(v_unlocked_ids);
     
     -- Award points for each newly unlocked achievement AND update total_points
     UPDATE trainers t

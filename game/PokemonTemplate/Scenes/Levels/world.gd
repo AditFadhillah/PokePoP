@@ -50,13 +50,27 @@ var player_node = null
 var welcome_shown = false
 
 func _ready():
+	# Add to music group for global mute control
+	world_music.add_to_group("music")
+	
 	world_music.play()
+	
+	# Apply mute state immediately if already muted
+	if GameManager.is_audio_muted():
+		world_music.volume_db = -80.0
+		print("🔇 World music muted on start (from GameManager), volume_db: ", world_music.volume_db)
+	else:
+		world_music.volume_db = 0.0
+		print("🔊 World music unmuted on start, volume_db: ", world_music.volume_db)
 	
 	# Listen for trainer updates from React
 	JSBridge.trainer_updated_from_js.connect(_on_trainer_updated_from_react)
 	
 	# Listen for Pokemon inventory updates from React
 	JSBridge.pokemon_inventory_updated_from_js.connect(_on_pokemon_inventory_updated_from_react)
+	
+	# Listen for mute/unmute from React
+	JSBridge.mute_audio_from_js.connect(_on_mute_audio_from_js)
 	
 	# Set initial trainer label to show waiting state
 	trainer_label.text = "Trainer: ..."
@@ -93,6 +107,11 @@ func _process(_delta):
 	
 	if !GameManager.is_battle and !world_music.is_playing():
 		world_music.play()
+		# Apply mute state from GameManager
+		if GameManager.is_audio_muted():
+			world_music.volume_db = -80.0
+		else:
+			world_music.volume_db = 0.0
 	
 	# Control UI visibility during battle
 	update_ui_visibility()
@@ -187,3 +206,13 @@ func show_welcome_message(message: String):
 	
 	# Connect to second message's closed signal to reset flag
 	second_welcome.tree_exited.connect(_on_sign_closed)
+
+func _on_mute_audio_from_js(mute: bool):
+	# Update global state (already done by JSBridge, but ensure it's applied)
+	GameManager.set_muted(mute)
+	if mute:
+		world_music.volume_db = -80.0
+		print("🔇 World music muted via signal, volume_db: ", world_music.volume_db)
+	else:
+		world_music.volume_db = 0.0
+		print("🔊 World music unmuted via signal, volume_db: ", world_music.volume_db)

@@ -8,6 +8,7 @@ var turn = "player"
 var is_battle = false
 var is_dialog = false
 var is_inventory = false
+var is_muted = false
 
 # Trainer and Pokemon data
 var trainer_name = ""
@@ -24,6 +25,24 @@ func set_trainer_name(name: String):
 
 func get_trainer_name() -> String:
 	return trainer_name
+
+# Audio management functions
+func set_muted(muted: bool):
+	is_muted = muted
+	print("🔇 Global mute state set to: ", muted)
+	
+	# Apply mute to all active audio immediately
+	var audio_servers = get_tree().get_nodes_in_group("music")
+	for audio in audio_servers:
+		if audio is AudioStreamPlayer or audio is AudioStreamPlayer2D:
+			if muted:
+				audio.volume_db = -80.0  # Effectively silent
+			else:
+				audio.volume_db = 0.0  # Normal volume
+			print("🔊 Applied mute state to audio node: ", audio.name, " volume_db: ", audio.volume_db)
+
+func is_audio_muted() -> bool:
+	return is_muted
 
 # Pokemon inventory management
 func add_pokemon_to_inventory(pokemon_name: String, level: int, points: int):

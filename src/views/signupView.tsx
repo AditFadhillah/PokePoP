@@ -55,9 +55,10 @@ export default function SignupView({ onBack, onSuccess }: Props) {
       const { error: trainerError } = await supabase
         .from('trainers')
         .insert([{
-          user_id: newUser.id,
+          test_user_id: newUser.id,  // Link to test_username table
           name: username,
-          total_points: 0
+          total_points: 0,
+          achievement_points: 0
         }])
 
       if (trainerError) {

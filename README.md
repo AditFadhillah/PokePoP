@@ -160,7 +160,7 @@ git show HEAD
 
 # ''''''''''''''''''''''''''''''''''''''''
 git add .
-git commit -m "New stairs for vulcano"
+git commit -m "Implementation after testing week: Tutorial, Hint, Achiement (working), Editor (fixed), Leaderboard expanded, Music (muted), better instruction for tasks"
 
 git push neurogen ready
 

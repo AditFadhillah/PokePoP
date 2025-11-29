@@ -68,6 +68,10 @@ print("Ready to start your adventure!")`)
   // const [currentBattlePokemon, setCurrentBattlePokemon] = useState<any>(null)
   const [, setCurrentBattlePokemon] = useState<any>(null)
   const taskCompletionSentRef = useRef(false)
+  const lastTaskOutputRef = useRef<string>('')
+  
+  // Track last 2 task IDs to prevent repetition
+  const [recentTaskIds, setRecentTaskIds] = useState<string[]>([])
 
   // Leaderboard State
   const [leaderboard, setLeaderboard] = useState<any[]>([])
@@ -81,8 +85,43 @@ print("Ready to start your adventure!")`)
   // Milestones Modal State
   const [showMilestones, setShowMilestones] = useState(false)
 
+  // Tutorial Modal State
+  const [showTutorial, setShowTutorial] = useState(false)
+
+  // Mute State
+  const [isMuted, setIsMuted] = useState(false)
+
   // Current Battle Region State (for achievement tracking)
   const [currentBattleRegion, setCurrentBattleRegion] = useState<string | null>(null)
+
+  // Hint System State
+  const [currentHintIndex, setCurrentHintIndex] = useState(0)
+  const [currentHint, setCurrentHint] = useState('')
+  const hintIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Array of helpful hints for exploration
+  const explorationHints = [
+    "💡 Tip: Explore all 4 regions!",
+    "💡 Each region has different types of programming tasks.",
+    "💡 Press F to interact with objects in the world!",
+    "💡 Look for Tall Grass - Pokemon hide there!",
+    "💡 Orange Crystal Boulders contain Pokemon - investigate them!",
+    "💡 Washed up Kelp on the beach has Pokemon - check it out!",
+    "💡 Each region has unique Pokemon and tasks - explore them all!",
+    "💡 Forest Region: Master loops and iterations - for loops and nested loops",
+    "💡 Beach Region: Learn dictionaries - key-value pairs, merging, and lookups!",
+    "💡 Volcano Region: Practice regex patterns - search, replace, and validate!",
+    "💡 Swamp Region: Explore data structures - tuples and comprehensions!"
+
+  ]
+  
+  // Array of helpful hints for battle
+  const battleHints = [
+    "💡 Stuck on a task? Click the References button for Python syntax help!",
+    "💡 Need inspiration? Check the Examples button for code samples!",
+    "💡 Select RUN and press ENTER if you don't want to capture this Pokemon!",
+    "💡 Track your progress! Click Achievements to see your milestones!"
+  ]
 
   // Usage Session Tracking
   const usageSession = useUsageSession(
@@ -179,7 +218,7 @@ print("Ready to start your adventure!")`)
         .from('trainer_leaderboard')
         .select('*')
         .order('total_points', { ascending: false })
-        .limit(6)
+        .limit(8)
       
       console.log('Leaderboard data:', data)
       console.log('Leaderboard error:', error)
@@ -199,7 +238,7 @@ print("Ready to start your adventure!")`)
           .from('trainers')
           .select('id, name, total_points, created_at, user_id')
           .order('total_points', { ascending: false })
-          .limit(6)
+          .limit(8)
         
         if (trainersError) {
           console.error('Fallback query also failed:', trainersError)
@@ -246,6 +285,37 @@ print("Ready to start your adventure!")`)
     initializeApp()
   }, [])
 
+  // Hint cycling system - shows helpful tips during exploration and battle
+  useEffect(() => {
+    // Clear any existing interval
+    if (hintIntervalRef.current) {
+      clearInterval(hintIntervalRef.current)
+    }
+
+    // Choose appropriate hint array based on game status
+    const hints = gameStatus === 'battle' ? battleHints : explorationHints
+    
+    // Show first hint immediately
+    setCurrentHint(hints[currentHintIndex % hints.length])
+
+    // Set up interval to cycle through hints every 10 seconds
+    hintIntervalRef.current = setInterval(() => {
+      setCurrentHintIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % hints.length
+        setCurrentHint(hints[nextIndex])
+        return nextIndex
+      })
+    }, 10000) // 10 seconds between hints
+
+    // Cleanup function
+    return () => {
+      if (hintIntervalRef.current) {
+        clearInterval(hintIntervalRef.current)
+        hintIntervalRef.current = null
+      }
+    }
+  }, [gameStatus, currentHintIndex, explorationHints, battleHints])
+
   async function initializeApp() {
     // For now, just load trainers without forcing authentication
     // The login system is available but not required
@@ -255,11 +325,11 @@ print("Ready to start your adventure!")`)
     // Load leaderboard
     await loadLeaderboard()
     
-    if (trainers.length > 0) {
-      setOutput(`Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
-    } else {
-      setOutput('⚠️ No trainers found in database.')
-    }
+    // if (trainers.length > 0) {
+    //   setOutput(`Found ${trainers.length} trainer(s) in database. ${currentAppUser ? 'Logged in!' : 'Playing as guest.'}`)
+    // } else {
+    //   setOutput('⚠️ No trainers found in database.')
+    // }
   }
 
   // ===== Login/Signup Functions =====
@@ -444,7 +514,7 @@ print("Ready to start your adventure!")`)
           setOutput(`Game started! Trainer ${trainer.name} loaded with ${pokemonData.length} Pokemon.`)
         } else {
           console.error('No trainer found! currentTrainer:', currentTrainer, 'currentTrainerRef:', currentTrainerRef.current)
-          setOutput('No trainer selected. Please select a trainer first.')
+          setOutput('Playing as guest. Progress will not be saved. Please log in to track your achievements!')
         }
       }, 500)
     } else if (data.type === 'request_current_trainer') {
@@ -478,10 +548,10 @@ print("Ready to start your adventure!")`)
     // Use ref as fallback since state might not be updated yet
     const trainer = currentTrainerRef.current || currentTrainer
     
-    if (!trainer) {
-      setOutput('⚠️ Warning: No trainer selected. Please select a trainer before capturing Pokemon.')
-      return
-    }
+    // if (!trainer) {
+    //   setOutput('⚠️ Warning: No trainer selected. Please select a trainer before capturing Pokemon.')
+    //   return
+    // }  
 
     const pokemonData = {
       name: captureData.data?.pokemon_name || captureData.pokemon_name || 'Unknown',
@@ -505,19 +575,21 @@ print("Ready to start your adventure!")`)
     const success = await addPokemonToDatabase(trainer.id, pokemonData)
     
     if (success) {
-      // Create detailed output message with time bonus info
-      let outputMessage = `${pokemonData.name} (Lv.${pokemonData.level}) captured and saved to database!\n\n`
+      // Get the actual task output from the ref (stored during validation)
+      const taskOutput = lastTaskOutputRef.current || captureData.data?.task_output || captureData.task_output || currentTask?.expected_output || ''
+      
+      // Create detailed output message combining task success and capture info
+      let outputMessage = `✅ Correct! Output: ${taskOutput}\n\n🎉 ${pokemonData.name.toUpperCase()} (Lv.${pokemonData.level}) captured!\n\n`
       
       if (captureTimeSeconds) {
         outputMessage += `⏱️ Solve Time: ${captureTimeSeconds}s\n`
       }
       
-      if (basePoints !== null && timeBonus !== null && timePercentage !== null) {
-        outputMessage += `💰 Base Points: ${basePoints}\n`
-        outputMessage += `⏱️ Time Bonus: +${timeBonus} (${timePercentage}% remaining)\n`
+      if (basePoints !== null && timeBonus !== null) {
+        outputMessage += `💰 Points: ${basePoints} (Base) + ${timeBonus} (Time Bonus)\n`
         outputMessage += `✨ Total: ${pokemonData.points} points`
       } else {
-        outputMessage += `+${pokemonData.points} points`
+        outputMessage += `✨ Total: ${pokemonData.points} points`
       }
       
       setOutput(outputMessage)
@@ -618,8 +690,13 @@ print("Ready to start your adventure!")`)
   async function loadRandomTask(region: string | null = null) {
     try {
       console.log('Loading random task for region:', region)
+      console.log('Excluding recent task IDs:', recentTaskIds)
+      
       const { data, error } = await supabase
-        .rpc('get_random_task', { task_category: region })
+        .rpc('get_random_task', { 
+          task_category: region,
+          excluded_task_ids: recentTaskIds 
+        })
       
       console.log('Task data:', data)
       console.log('Task error:', error)
@@ -636,8 +713,48 @@ print("Ready to start your adventure!")`)
         const task = data[0]
         console.log('Task loaded:', task)
         setCurrentTask(task)
-        setCode(task.starter_code || '')
-        setOutput(`Region: ${region || 'Any'} \n\nTask: ${task.title}\n\n${task.description}\n\nSolve this task to capture the Pokemon!`)
+        
+        // Add task instructions as comments at the top of the starter code
+        // Wrap long descriptions to multiple lines (max 70 chars per line)
+        const wrapText = (text: string, maxLength: number = 70) => {
+          const words = text.split(' ')
+          const lines: string[] = []
+          let currentLine = ''
+          
+          for (const word of words) {
+            if ((currentLine + word).length > maxLength && currentLine.length > 0) {
+              lines.push(currentLine.trim())
+              currentLine = word + ' '
+            } else {
+              currentLine += word + ' '
+            }
+          }
+          if (currentLine.trim().length > 0) {
+            lines.push(currentLine.trim())
+          }
+          
+          return lines.map(line => `# ${line}`).join('\n')
+        }
+        
+        const codeWithInstructions = `# ================================================================
+# TASK: ${task.title}
+# ================================================================
+${wrapText(task.description)}
+#
+# Region: ${region || 'Any'}
+# Read the TODO comments below for hints!
+# ================================================================
+
+${task.starter_code || ''}`
+        
+        setCode(codeWithInstructions)
+        setOutput(`${region || 'Any'} Region - Wild Pokemon appeared!\n\nSolve the task in the editor to capture it!`)
+        
+        // Add this task ID to recent tasks (keep only last 2)
+        setRecentTaskIds(prev => {
+          const updated = [task.id, ...prev]
+          return updated.slice(0, 2) // Keep only the 2 most recent
+        })
       } else {
         console.warn('No tasks found in database for region:', region)
         setOutput('❌ No tasks available for this region. Please run the database migration.')
@@ -685,6 +802,68 @@ print("Ready to start your adventure!")`)
     }
   }
 
+  // Helper function to extract relevant error message from Python traceback
+  function formatPythonError(errorMessage: string): string {
+    // Split the error message by lines
+    const lines = errorMessage.split('\n')
+    
+    // Look for the actual error line (usually the last non-empty line)
+    const errorLines = lines.filter(line => line.trim() !== '')
+    
+    // Find the line with the actual error type (SyntaxError, NameError, etc.)
+    const errorTypeLine = errorLines.find(line => 
+      line.includes('Error:') || 
+      line.match(/^\w+Error:/) ||
+      line.match(/^\w+Exception:/)
+    )
+    
+    // Find the line number and code snippet
+    let lineInfo = ''
+    let codeSnippet = ''
+    let caretLine = ''
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      
+      // Look for File "<exec>", line X pattern
+      if (line.includes('File "<exec>"') || line.includes('line ')) {
+        const lineMatch = line.match(/line (\d+)/)
+        if (lineMatch) {
+          lineInfo = `Line ${lineMatch[1]}`
+          // Get the code snippet (usually next line) and caret (line after that)
+          if (i + 1 < lines.length) {
+            codeSnippet = lines[i + 1].trim()
+          }
+          if (i + 2 < lines.length && lines[i + 2].includes('^')) {
+            caretLine = '    ' + lines[i + 2].trim()
+          }
+        }
+      }
+    }
+    
+    // Build simplified error message
+    if (errorTypeLine) {
+      let result = errorTypeLine.trim()
+      
+      if (lineInfo) {
+        result = `${lineInfo}: ${result}`
+      }
+      
+      if (codeSnippet) {
+        result += `\n    ${codeSnippet}`
+      }
+      
+      if (caretLine) {
+        result += `\n${caretLine}`
+      }
+      
+      return result
+    }
+    
+    // Fallback: return the original error if we couldn't parse it
+    return errorMessage
+  }
+
   async function runPythonCode() {
     if (!pyodide) return
 
@@ -704,12 +883,22 @@ print("Ready to start your adventure!")`)
         const isCorrect = validateTaskOutput(outputText, currentTask.expected_output)
         
         if (isCorrect) {
-          setOutput(`✅ Correct! Output: ${outputText}\n\n🎉 Task completed successfully!`)
+          // Store the task output in ref so handlePokemonCapture can access it
+          lastTaskOutputRef.current = outputText
           setTaskOutput(outputText)
-          // Send success to game to trigger capture (only once)
+          // Send success to game to trigger capture (only once) with the task output
           if (!taskCompletionSentRef.current) {
             taskCompletionSentRef.current = true
-            sendTaskCompletionToGame(true)
+            // Send the actual task output to the game so it can include it in capture data
+            const gameFrame = document.querySelector('.game-frame') as HTMLIFrameElement
+            if (gameFrame && gameFrame.contentWindow) {
+              gameFrame.contentWindow.postMessage({
+                type: 'TASK_COMPLETED',
+                completed: true,
+                task_id: currentTask?.id,
+                task_output: outputText
+              }, '*')
+            }
           }
         } else {
           setOutput(`❌ Incorrect!\n\nYour output: ${outputText}\n\nExpected: ${currentTask.expected_output}\n\nTry again!`)
@@ -722,7 +911,8 @@ print("Ready to start your adventure!")`)
         
       }
     } catch (err: any) {
-      setOutput('Error: ' + err.message)
+      const formattedError = formatPythonError(err.message)
+      setOutput('Error: ' + formattedError)
       if (isTaskActive) {
         sendTaskCompletionToGame(false)
       }
@@ -814,6 +1004,8 @@ print("Ready to start your adventure!")`)
               setCurrentAppUser(null)
               currentAppUserRef.current = null
               setAppView('main')
+              // Show tutorial popup when playing as guest
+              setShowTutorial(true)
               setOutput('Playing as guest')
             }}
             className="guest-login-button"
@@ -842,36 +1034,17 @@ print("Ready to start your adventure!")`)
             setCurrentAppUser(data)
             currentAppUserRef.current = data
 
-            // Record first login for streak & unlock streak achievements
-            try {
-              await supabase.from('login_events').insert({ username })
-              const { data: streak, error: streakErr } = await supabase.rpc('compute_login_streak', {
-                p_username: username
-              })
-              if (!streakErr && streak != null) {
-                const { data: unlocked, error: unlockErr } = await supabase.rpc('check_achievements', {
-                  p_username: username,
-                  p_metric: 'login_streak_days',
-                  p_value: streak
-                })
-                if (unlockErr) {
-                  console.error('Signup login streak achievement check error:', unlockErr)
-                } else if (unlocked && unlocked.length > 0) {
-                  console.log('🎉 Signup streak achievements unlocked:', unlocked)
-                }
-              } else if (streakErr) {
-                console.error('compute_login_streak error:', streakErr)
-              }
-            } catch (e) {
-              console.error('Signup streak tracking failed:', e)
-            }
-
             // Load user's trainer (should be the one just created)
             const userTrainers = await loadTrainers(data.id)
             if (userTrainers.length > 0) {
               const trainer = userTrainers[0]
               setCurrentTrainer(trainer)
               currentTrainerRef.current = trainer
+              
+              // Initialize user stats and login streak for new user
+              await initializeUserStats(data.id, trainer.id)
+              await updateLoginStreak(data.id, trainer.id)
+              
               const pokemonData = await loadPokemonInventory(trainer.id)
               await sendTrainerToGame(trainer.name)
               await sendPokemonInventoryToGame(pokemonData)
@@ -894,6 +1067,8 @@ print("Ready to start your adventure!")`)
         username={currentAppUser?.username}
         onEnterGame={() => {
           setAppView('main')
+          // Show tutorial popup when entering game
+          setShowTutorial(true)
           // Don't send trainer yet - wait for GAME_STARTED signal from Godot
           setOutput('Game loading... Press ENTER to start.')
         }}
@@ -933,12 +1108,18 @@ print("Ready to start your adventure!")`)
           >
             Examples
           </button>
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="tutorial-button"
+          >
+            Tutorial
+          </button>
           {currentAppUser && (
             <button
               onClick={() => setShowMilestones(true)}
               className="milestones-button"
             >
-              Milestones
+              Achievements
             </button>
           )}
           <button
@@ -968,7 +1149,43 @@ print("Ready to start your adventure!")`)
       <div className="left-panel">
         {/* Game Section */}
         <div className="game-section">
-          <h3>PyMon - Creature Collector</h3>
+          <div className="game-header">
+            <h3>PyMon - Creature Collector</h3>
+            <button 
+              className="mute-button"
+              onClick={() => {
+                const iframe = document.querySelector('.game-frame') as HTMLIFrameElement;
+                if (iframe) {
+                  // Toggle mute state
+                  const newMuteState = !isMuted;
+                  setIsMuted(newMuteState);
+                  
+                  // Try to control iframe audio by setting audio attribute
+                  if (newMuteState) {
+                    iframe.contentWindow?.postMessage({ type: 'MUTE_AUDIO' }, '*');
+                  } else {
+                    iframe.contentWindow?.postMessage({ type: 'UNMUTE_AUDIO' }, '*');
+                  }
+                  
+                  // Also try to mute all audio elements in the iframe
+                  try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                    if (iframeDoc) {
+                      const audioElements = iframeDoc.querySelectorAll('audio, video');
+                      audioElements.forEach((audio: any) => {
+                        audio.muted = newMuteState;
+                      });
+                    }
+                  } catch (e) {
+                    console.log('Cannot access iframe content (CORS):', e);
+                  }
+                }
+              }}
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? '🔇' : '🔊'}
+            </button>
+          </div>
           <iframe 
             src="/PokePoP/game/web/Pokemon_Clone.html"
             width="100%"
@@ -978,6 +1195,21 @@ print("Ready to start your adventure!")`)
             onLoad={() => {
               console.log('Game iframe loaded, waiting for GAME_STARTED signal...')
               setOutput('Press ENTER in game to start')
+              
+              // Send initial mute state to game with retries to ensure it's received
+              const iframe = document.querySelector('.game-frame') as HTMLIFrameElement;
+              if (iframe && iframe.contentWindow) {
+                const sendMuteState = () => {
+                  const message = isMuted ? { type: 'MUTE_AUDIO' } : { type: 'UNMUTE_AUDIO' };
+                  iframe.contentWindow?.postMessage(message, '*');
+                  console.log('🔊 Sent initial mute state to game:', isMuted ? 'MUTED' : 'UNMUTED');
+                };
+                
+                // Send multiple times with delays to ensure game receives it
+                setTimeout(sendMuteState, 100);
+                setTimeout(sendMuteState, 500);
+                setTimeout(sendMuteState, 1000);
+              }
             }}
             // allow="fullscreen"
           />
@@ -1067,6 +1299,13 @@ print("Ready to start your adventure!")`)
           <pre className="python-output-compact">
             {output}
           </pre>
+
+          {/* Hints Terminal - Shows exploration tips */}
+          {currentHint && (
+            <pre className="python-hints-terminal">
+              {currentHint}
+            </pre>
+          )}
         </div>
       </div>
 
@@ -1082,6 +1321,17 @@ print("Ready to start your adventure!")`)
         onClose={() => setShowMilestones(false)}
         userId={currentAppUser?.id || null}
       />
+
+      {/* Tutorial Modal */}
+      {showTutorial && (
+        <div className="tutorial-modal-overlay" onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="tutorial-heading">Tutorial</h2>
+            <button onClick={() => setShowTutorial(false)} className="tutorial-close-button">X</button>
+            <img src="/PokePoP/TutorialPage.png" alt="Tutorial" className="tutorial-image" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
