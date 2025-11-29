@@ -159,14 +159,22 @@ git show HEAD
 
 
 # ''''''''''''''''''''''''''''''''''''''''
+# New Repository: https://github.com/AditFadhillah/PyMon
+# Main development branch: ready
+# Production branch: main (auto-deployed to gh-pages)
+
 git add .
 git commit -m "Implementation after testing week: Tutorial, Hint, Achiement (working), Editor (fixed), Leaderboard expanded, Music (muted), better instruction for tasks"
 
+# Push to neurogen backup
 git push neurogen ready
 
+# Push ready branch to main branch on PyMon repo
 git push origin ready:main --force
 
-git push origin main
+# Or push to ready branch directly
+git push origin ready
 
+# Build and deploy to GitHub Pages
 npm run build
 npm run deploy

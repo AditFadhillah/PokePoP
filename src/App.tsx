@@ -1187,7 +1187,7 @@ ${task.starter_code || ''}`
             </button>
           </div>
           <iframe 
-            src="/PokePoP/game/web/Pokemon_Clone.html"
+            src="/PyMon/game/web/Pokemon_Clone.html"
             width="100%"
             height="100%"
             title="Pokemon Clone Game"
@@ -1328,7 +1328,7 @@ ${task.starter_code || ''}`
           <div className="tutorial-modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 className="tutorial-heading">Tutorial</h2>
             <button onClick={() => setShowTutorial(false)} className="tutorial-close-button">X</button>
-            <img src="/PokePoP/TutorialPage.png" alt="Tutorial" className="tutorial-image" />
+            <img src="/PyMon/TutorialPage.png" alt="Tutorial" className="tutorial-image" />
           </div>
         </div>
       )}
