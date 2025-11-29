@@ -15,7 +15,7 @@ export default function DashboardView({ username, onEnterGame, onLogout }: Props
         alignItems: 'center', 
         justifyContent: 'center', 
         minHeight: '100vh',
-        backgroundImage: 'url(/PokePoP/Background_login.png)',
+        backgroundImage: 'url(/PyMon/Background_login.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
