@@ -568,7 +568,6 @@ print("Ready to start your adventure!")`)
     // Extract time bonus info if available
     const basePoints = captureData.data?.base_points || null
     const timeBonus = captureData.data?.time_bonus || null
-    const timePercentage = captureData.data?.time_percentage || null
     const captureTimeSeconds = pokemonData.capture_time_ms ? (pokemonData.capture_time_ms / 1000).toFixed(2) : null
 
     // Add to database using trainer from ref/state

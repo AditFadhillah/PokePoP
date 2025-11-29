@@ -164,7 +164,7 @@ git show HEAD
 # Production branch: main (auto-deployed to gh-pages)
 
 git add .
-git commit -m "Implementation after testing week: Tutorial, Hint, Achiement (working), Editor (fixed), Leaderboard expanded, Music (muted), better instruction for tasks"
+git commit -m "TEST"
 
 # Push to neurogen backup
 git push neurogen ready
