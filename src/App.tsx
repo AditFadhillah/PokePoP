@@ -11,7 +11,7 @@ import { updateCaptureStats, initializeUserStats, updateLoginStreak } from './li
 // Import neurogen login views and components
 import WelcomeView from './views/welcomeView'
 import SignupView from './views/signupView'
-import DashboardView from './views/dashboardView'
+// import DashboardView from './views/dashboardView'
 import LoginModal from './components/loginmodal'
 import ExamplesModal from './views/ExamplesModal'
 import ReferencesModal from './views/ReferencesModal'
@@ -76,7 +76,7 @@ print("Ready to start your adventure!")`)
   const [recentTaskIds, setRecentTaskIds] = useState<string[]>([])
 
   // Leaderboard State
-  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  // const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   // References Modal State
   const [showReferences, setShowReferences] = useState(false)

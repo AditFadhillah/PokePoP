@@ -56,7 +56,8 @@ export default function SignupView({ onBack, onSuccess }: Props) {
       const { error: trainerError } = await supabase
         .from('trainers')
         .insert([{
-          test_user_id: newUser.id,  // Link to test_username table
+          user_id: newUser.id,        // Link to test_username.id for pokemon_inventory and other features
+          test_user_id: newUser.id,   // Legacy field, kept for compatibility
           name: username,
           total_points: 0,
           achievement_points: 0,
