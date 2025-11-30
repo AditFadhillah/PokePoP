@@ -75,9 +75,6 @@ print("Ready to start your adventure!")`)
   // Track last 2 task IDs to prevent repetition
   const [recentTaskIds, setRecentTaskIds] = useState<string[]>([])
 
-  // Leaderboard State
-  // const [leaderboard, setLeaderboard] = useState<any[]>([])
-
   // References Modal State
   const [showReferences, setShowReferences] = useState(false)
   
@@ -254,12 +251,10 @@ print("Ready to start your adventure!")`)
           return []
         }
         
-        setLeaderboard(trainersData || [])
         console.log('Leaderboard set from fallback:', trainersData)
         return trainersData || []
       }
       
-      setLeaderboard(data || [])
       console.log('Leaderboard set to:', data)
       return data || []
     } catch (error) {
