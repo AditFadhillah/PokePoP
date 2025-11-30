@@ -129,7 +129,7 @@ export default function MilestonesModal({ show, onClose, userId }: MilestonesMod
           alignItems: 'center',
           gap: '10px'
         }}>
-          Milestones
+          Achievements
         </h2>
         <button
           onClick={onClose}
@@ -166,7 +166,7 @@ export default function MilestonesModal({ show, onClose, userId }: MilestonesMod
         }}>
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>🎯</div>
           <p style={{ margin: 0, fontSize: '16px' }}>
-            No milestones unlocked yet.
+            No achievements unlocked yet.
             <br />
             Start playing to earn achievements!
           </p>
@@ -185,7 +185,7 @@ export default function MilestonesModal({ show, onClose, userId }: MilestonesMod
               color: '#fbbf24',
               fontWeight: 'bold'
             }}>
-              {achievements.length} Milestone{achievements.length !== 1 ? 's' : ''} Unlocked
+              {achievements.length} Achievement{achievements.length !== 1 ? 's' : ''} Unlocked
             </div>
           </div>
 

@@ -175,8 +175,8 @@ func pokemon_fled():
 			"reason": "time_limit"
 		})
 	
-	# Wait then exit battle
-	await get_tree().create_timer(2.0).timeout
+	# Wait 4 seconds then exit battle
+	await get_tree().create_timer(4.0).timeout
 	anim.play("fade_out")
 
 func start_battle_timer():
@@ -292,8 +292,8 @@ func _trigger_capture():
 			"captured_at": Time.get_datetime_string_from_system()
 		})
 	
-	# Wait a moment then exit battle
-	await get_tree().create_timer(2.0).timeout 
+	# Wait longer to let player enjoy the capture moment
+	await get_tree().create_timer(5.0).timeout 
 	anim.play("fade_out")
 
 func _on_attack_btn_1_pressed():

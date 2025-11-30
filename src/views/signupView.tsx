@@ -10,6 +10,7 @@ export default function SignupView({ onBack, onSuccess }: Props) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [team, setTeam] = useState<'red' | 'blue' | 'yellow'>('red')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -58,7 +59,8 @@ export default function SignupView({ onBack, onSuccess }: Props) {
           test_user_id: newUser.id,  // Link to test_username table
           name: username,
           total_points: 0,
-          achievement_points: 0
+          achievement_points: 0,
+          team: team
         }])
 
       if (trainerError) {
@@ -107,7 +109,6 @@ export default function SignupView({ onBack, onSuccess }: Props) {
             onChange={(e) => setPassword(e.target.value)}
             style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #d1d5db', marginBottom: 12 }}
           />
-
           <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 4 }}>Confirm Password</label>
           <input
             type="password"
@@ -116,6 +117,31 @@ export default function SignupView({ onBack, onSuccess }: Props) {
             onChange={(e) => setConfirmPassword(e.target.value)}
             style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #d1d5db', marginBottom: 16 }}
           />
+
+          <label style={{ display: 'block', fontSize: 12, color: '#374151', marginBottom: 4 }}>Choose Your Team</label>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <button
+              type="button"
+              onClick={() => setTeam('red')}
+              style={{ flex: 1, padding: 12, border: team === 'red' ? '3px solid #dc2626' : '1px solid #d1d5db', borderRadius: 6, background: team === 'red' ? '#fee2e2' : '#fff', color: '#dc2626', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              🔴 Team Red
+            </button>
+            <button
+              type="button"
+              onClick={() => setTeam('blue')}
+              style={{ flex: 1, padding: 12, border: team === 'blue' ? '3px solid #2563eb' : '1px solid #d1d5db', borderRadius: 6, background: team === 'blue' ? '#dbeafe' : '#fff', color: '#2563eb', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              🔵 Team Blue
+            </button>
+            <button
+              type="button"
+              onClick={() => setTeam('yellow')}
+              style={{ flex: 1, padding: 12, border: team === 'yellow' ? '3px solid #eddd00ff' : '1px solid #d1d5db', borderRadius: 6, background: team === 'yellow' ? '#fef3c7' : '#fff', color: '#eddd00ff', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              🟡 Team Yellow
+            </button>
+          </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button

@@ -16,6 +16,8 @@ import LoginModal from './components/loginmodal'
 import ExamplesModal from './views/ExamplesModal'
 import ReferencesModal from './views/ReferencesModal'
 import MilestonesModal from './views/MilestonesModal'
+import IndividualLeaderboardModal from './views/IndividualLeaderboardModal'
+import TeamLeaderboardPanel from './views/TeamLeaderboardPanel'
 
 function App() {
   // Python Editor States
@@ -88,6 +90,9 @@ print("Ready to start your adventure!")`)
   // Tutorial Modal State
   const [showTutorial, setShowTutorial] = useState(false)
 
+  // Individual Leaderboard Modal State
+  const [showIndividualLeaderboard, setShowIndividualLeaderboard] = useState(false)
+
   // Mute State
   const [isMuted, setIsMuted] = useState(false)
 
@@ -98,6 +103,10 @@ print("Ready to start your adventure!")`)
   const [currentHintIndex, setCurrentHintIndex] = useState(0)
   const [currentHint, setCurrentHint] = useState('')
   const hintIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Code editor refs for scroll synchronization
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const syntaxHighlighterRef = useRef<HTMLDivElement>(null)
   
   // Array of helpful hints for exploration
   const explorationHints = [
@@ -315,6 +324,34 @@ print("Ready to start your adventure!")`)
       }
     }
   }, [gameStatus, currentHintIndex, explorationHints, battleHints])
+
+  // Scroll sync - transform syntax highlighter to follow textarea scroll
+  useEffect(() => {
+    const textarea = textareaRef.current
+    const wrapper = syntaxHighlighterRef.current
+    
+    if (!textarea || !wrapper) return
+    
+    const handleTextareaScroll = () => {
+      const scrollTop = textarea.scrollTop
+      const scrollLeft = textarea.scrollLeft
+      
+      // Find the syntax highlighter div (first child of wrapper)
+      const highlighterDiv = wrapper.firstElementChild as HTMLElement
+      if (highlighterDiv) {
+        highlighterDiv.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`
+      }
+    }
+    
+    textarea.addEventListener('scroll', handleTextareaScroll)
+    
+    // Initial sync
+    handleTextareaScroll()
+    
+    return () => {
+      textarea.removeEventListener('scroll', handleTextareaScroll)
+    }
+  }, [code])
 
   async function initializeApp() {
     // For now, just load trainers without forcing authentication
@@ -736,12 +773,10 @@ print("Ready to start your adventure!")`)
         }
         
         const codeWithInstructions = `# ================================================================
+# Region: ${region || 'Any'}
 # TASK: ${task.title}
 # ================================================================
 ${wrapText(task.description)}
-#
-# Region: ${region || 'Any'}
-# Read the TODO comments below for hints!
 # ================================================================
 
 ${task.starter_code || ''}`
@@ -1061,29 +1096,35 @@ ${task.starter_code || ''}`
 
   // Dashboard view (after login, before entering game)
   if (appView === 'dashboard') {
-    return (
-      <DashboardView
-        username={currentAppUser?.username}
-        onEnterGame={() => {
-          setAppView('main')
-          // Show tutorial popup when entering game
-          setShowTutorial(true)
-          // Don't send trainer yet - wait for GAME_STARTED signal from Godot
-          setOutput('Game loading... Press ENTER to start.')
-        }}
-        onLogout={async () => {
-          // End usage session before logout
-          if (usageSession.sessionActive) {
-            await usageSession.endSession()
-          }
-          setCurrentAppUser(null)
-          currentAppUserRef.current = null
-          setCurrentTrainer(null)
-          setAppView('welcome')
-          setOutput('👋 Logged out')
-        }}
-      />
-    )
+    // Commented out to skip dashboard screen - go directly to game
+    // return (
+    //   <DashboardView
+    //     username={currentAppUser?.username}
+    //     onEnterGame={() => {
+    //       setAppView('main')
+    //       // Show tutorial popup when entering game
+    //       setShowTutorial(true)
+    //       // Don't send trainer yet - wait for GAME_STARTED signal from Godot
+    //       setOutput('Game loading... Press ENTER to start.')
+    //     }}
+    //     onLogout={async () => {
+    //       // End usage session before logout
+    //       if (usageSession.sessionActive) {
+    //         await usageSession.endSession()
+    //       }
+    //       setCurrentAppUser(null)
+    //       currentAppUserRef.current = null
+    //       setCurrentTrainer(null)
+    //       setAppView('welcome')
+    //       setOutput('👋 Logged out')
+    //     }}
+    //   />
+    // )
+    
+    // Skip dashboard and go directly to game
+    setAppView('main')
+    setShowTutorial(true)
+    setOutput('Game loading... Press ENTER to start.')
   }
 
   // Main game view (the existing game UI)
@@ -1092,9 +1133,48 @@ ${task.starter_code || ''}`
       {/* User Info Bar */}
       <div className="user-info-bar">
         <span className="trainer-username">
-          {currentAppUser ? `Trainer: ${currentAppUser.username}` : 'Playing as Guest'}
+          {currentAppUser ? (
+            <>
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              {currentAppUser.username}
+              {currentTrainer?.team && (
+                <span style={{ 
+                  marginLeft: '10px', 
+                  color: currentTrainer.team === 'red' ? '#dc2626' : currentTrainer.team === 'blue' ? '#2563eb' : '#eddd00ff',
+                  fontWeight: 'bold',
+                  textTransform: 'capitalize'
+                }}>
+                  Team {currentTrainer.team}
+                </span>
+              )}
+              {currentTrainer?.total_points !== undefined && (
+                <span style={{ marginLeft: '10px', color: '#fbbf24', fontWeight: 'bold' }}>
+                  ⭐ {currentTrainer.total_points}
+                </span>
+              )}
+            </>
+          ) : 'Playing as Guest'}
         </span>
         <div className="user-bar-buttons">
+          {currentAppUser && (
+            <>
+              <button
+                onClick={() => setShowMilestones(true)}
+                className="milestones-button"
+              >
+                Achievements
+              </button>
+              <button
+                onClick={() => setShowIndividualLeaderboard(true)}
+                className="tutorial-button"
+              >
+                Leaderboard
+              </button>
+            </>
+          )}
           <button
             onClick={() => setShowReferences(true)}
             className="references-button"
@@ -1110,17 +1190,10 @@ ${task.starter_code || ''}`
           <button
             onClick={() => setShowTutorial(true)}
             className="tutorial-button"
+            style={{ background: '#38a169' }}
           >
             Tutorial
           </button>
-          {currentAppUser && (
-            <button
-              onClick={() => setShowMilestones(true)}
-              className="milestones-button"
-            >
-              Achievements
-            </button>
-          )}
           <button
             onClick={async () => {
               if (currentAppUser) {
@@ -1201,7 +1274,6 @@ ${task.starter_code || ''}`
                 const sendMuteState = () => {
                   const message = isMuted ? { type: 'MUTE_AUDIO' } : { type: 'UNMUTE_AUDIO' };
                   iframe.contentWindow?.postMessage(message, '*');
-                  console.log('🔊 Sent initial mute state to game:', isMuted ? 'MUTED' : 'UNMUTED');
                 };
                 
                 // Send multiple times with delays to ensure game receives it
@@ -1214,27 +1286,8 @@ ${task.starter_code || ''}`
           />
         </div>
 
-        {/* Leaderboard Section */}
-        <div className="leaderboard-section">
-          <h3>🏆 Top Trainers</h3>
-          {leaderboard.length > 0 ? (
-            <div className="leaderboard-grid">
-              {leaderboard.map((trainer, index) => (
-                <div key={trainer.id} className="leaderboard-item">
-                  <span className="leaderboard-rank">#{index + 1}</span>
-                  <div className="leaderboard-info">
-                    <span className="leaderboard-name">{trainer.name}</span>
-                    <span className="leaderboard-points">⭐ {trainer.total_points}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ color: '#9ca3af', textAlign: 'center', padding: '1rem' }}>
-              No trainers found. Start capturing Pokemon!
-            </div>
-          )}
-        </div>
+        {/* Team Leaderboard Section */}
+        <TeamLeaderboardPanel />
       </div>
 
       {/* Right Side - Python Editor Only */}
@@ -1244,29 +1297,38 @@ ${task.starter_code || ''}`
           <h3>Python Editor</h3>
           
           {/* Game Status Indicator */}
-          <div className={`game-status-indicator ${gameStatus === 'battle' ? 'game-status-battle' : 'game-status-overworld'}`}>
-            {gameStatus === 'battle' ? 'IN BATTLE' : 'OVERWORLD'}
-          </div>
+          {/* <div className={`game-status-indicator ${gameStatus === 'battle' ? 'game-status-battle' : 'game-status-roaming'}`}>
+            {gameStatus === 'battle' ? 'IN BATTLE' : 'ROAMING'}
+          </div> */}
           
-          <div className="code-editor-wrapper">
-            <SyntaxHighlighter
-              language="python"
-              style={vscDarkPlus}
-              customStyle={{
-                margin: 0,
-                borderRadius: '4px',
-                fontSize: '16px',
-                lineHeight: '1.4',
-                height: '100%',
-                minHeight: '300px',
-              }}
-              showLineNumbers={true}
-              wrapLines={true}
-              lineNumberStyle={{ minWidth: '3em', paddingRight: '1em', color: '#858585' }}
-            >
-              {code}
-            </SyntaxHighlighter>
+          <div className="code-editor-wrapper" ref={syntaxHighlighterRef}>
+            <div>
+              <SyntaxHighlighter
+                language="python"
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  padding: '16px',
+                  borderRadius: '4px',
+                  fontSize: '16px',
+                  lineHeight: '1.4',
+                  background: 'transparent',
+                }}
+                showLineNumbers={true}
+                wrapLines={false}
+                lineNumberStyle={{ 
+                  minWidth: '3em', 
+                  paddingRight: '1em', 
+                  color: '#858585',
+                  userSelect: 'none',
+                  textAlign: 'right'
+                }}
+              >
+                {code}
+              </SyntaxHighlighter>
+            </div>
             <textarea
+              ref={textareaRef}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => {
@@ -1302,7 +1364,7 @@ ${task.starter_code || ''}`
           {/* Hints Terminal - Shows exploration tips */}
           {currentHint && (
             <pre className="python-hints-terminal">
-              {currentHint}
+              <span key={currentHintIndex}>{currentHint}</span>
             </pre>
           )}
         </div>
@@ -1331,6 +1393,13 @@ ${task.starter_code || ''}`
           </div>
         </div>
       )}
+
+      {/* Individual Leaderboard Modal */}
+      <IndividualLeaderboardModal 
+        show={showIndividualLeaderboard}
+        onClose={() => setShowIndividualLeaderboard(false)}
+        currentUserId={currentAppUser?.id || null}
+      />
     </div>
   )
 }
