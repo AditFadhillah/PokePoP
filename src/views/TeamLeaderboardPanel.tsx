@@ -107,7 +107,11 @@ export default function TeamLeaderboardPanel() {
                   </div>
                   <div style={{ display: 'flex', gap: '15px', fontSize: '0.85em' }}>
                     <span style={{ color: '#fbbf24' }}>⭐ {team.total_points}</span>
-                    <span style={{ color: '#9ca3af' }}>👥 {team.member_count}</span>
+                    <span style={{ color: '#9ca3af' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }}>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg> {team.member_count}</span>
                     {/* <span style={{ color: '#68d391' }}>📊 {Math.round(team.avg_points)}/trainer</span> */}
                   </div>
                 </div>
