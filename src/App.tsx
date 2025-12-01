@@ -17,6 +17,7 @@ import ExamplesModal from './views/ExamplesModal'
 import ReferencesModal from './views/ReferencesModal'
 import MilestonesModal from './views/MilestonesModal'
 import IndividualLeaderboardModal from './views/IndividualLeaderboardModal'
+import VolunteerModal from './views/VolunteerModal'
 import TeamLeaderboardPanel from './views/TeamLeaderboardPanel'
 
 function App() {
@@ -89,6 +90,9 @@ print("Ready to start your adventure!")`)
 
   // Individual Leaderboard Modal State
   const [showIndividualLeaderboard, setShowIndividualLeaderboard] = useState(false)
+
+  // Volunteer Modal State
+  const [showVolunteer, setShowVolunteer] = useState(false)
 
   // Mute State
   const [isMuted, setIsMuted] = useState(false)
@@ -1218,6 +1222,13 @@ ${task.starter_code || ''}`
             Tutorial
           </button>
           <button
+            onClick={() => setShowVolunteer(true)}
+            className="tutorial-button"
+            style={{ background: '#38a169' }}
+          >
+            Volunteer
+          </button>
+          <button
             onClick={async () => {
               if (currentAppUser) {
                 // End usage session before logout
@@ -1422,6 +1433,12 @@ ${task.starter_code || ''}`
         show={showIndividualLeaderboard}
         onClose={() => setShowIndividualLeaderboard(false)}
         currentUserId={currentAppUser?.id || null}
+      />
+
+      {/* Volunteer Modal */}
+      <VolunteerModal 
+        show={showVolunteer}
+        onClose={() => setShowVolunteer(false)}
       />
     </div>
   )
