@@ -105,6 +105,9 @@ print("Ready to start your adventure!")`)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const syntaxHighlighterRef = useRef<HTMLDivElement>(null)
   
+  // Refresh timestamp to trigger leaderboard updates
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0)
+  
   // Array of helpful hints for exploration
   const explorationHints = [
     "💡 Tip: Explore all 4 regions!",
@@ -661,8 +664,33 @@ print("Ready to start your adventure!")`)
       const updatedInventory = await loadPokemonInventory(trainer.id)
       await sendPokemonInventoryToGame(updatedInventory)
       
+      // Refresh current trainer's total_points from leaderboard view
+      const { data: updatedTrainerData, error: leaderboardError } = await supabase
+        .from('trainer_leaderboard')
+        .select('*')
+        .eq('id', trainer.id)
+        .single()
+      
+      if (updatedTrainerData && !leaderboardError) {
+        // Create a new trainer object with updated points to trigger React re-render
+        const updatedTrainer = { 
+          ...currentTrainer,
+          ...trainer,
+          total_points: updatedTrainerData.total_points 
+        }
+        setCurrentTrainer(updatedTrainer)
+        currentTrainerRef.current = updatedTrainer
+        setTotalPoints(updatedTrainerData.total_points)
+        console.log('✅ Updated current trainer points to:', updatedTrainerData.total_points)
+      } else {
+        console.error('❌ Failed to fetch updated trainer points:', leaderboardError)
+      }
+      
       // Refresh leaderboard after capture
       await loadLeaderboard()
+      
+      // Trigger team leaderboard refresh
+      setLeaderboardRefreshKey(prev => prev + 1)
     } else {
       setOutput(`${pokemonData.name} captured in game, but failed to save to database. Check console for details. (Hint: You may need to disable RLS in Supabase)`)
     }
@@ -1026,7 +1054,7 @@ ${task.starter_code || ''}`
           />
         </WelcomeView>
         
-        {/* Play as Guest button */}
+        {/* Play as Guest button
         <div className="guest-login-container">
           <button
             onClick={() => {
@@ -1041,7 +1069,7 @@ ${task.starter_code || ''}`
           >
             Skip Login - Play as Guest
           </button>
-        </div>
+        </div> */}
       </div>
     )
   }
@@ -1282,7 +1310,7 @@ ${task.starter_code || ''}`
         </div>
 
         {/* Team Leaderboard Section */}
-        <TeamLeaderboardPanel />
+        <TeamLeaderboardPanel key={leaderboardRefreshKey} />
       </div>
 
       {/* Right Side - Python Editor Only */}

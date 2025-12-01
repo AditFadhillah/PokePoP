@@ -164,7 +164,7 @@ git show HEAD
 # Production branch: main (auto-deployed to gh-pages)
 
 git add .
-git commit -m "Ready to launch"
+git commit -m "Fix dynamic points and remove Guest button"
 
 # Push to origin main
 git push origin main
