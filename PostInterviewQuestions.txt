@@ -1,0 +1,58 @@
+Questions: 
+
+Changing of RQ:  What are the potential in utilizing serious gaming approaches to support computer science students in experiencing hyper focus or flow when working with programming assignments?
+
+Key hypothesis (short):
+
+Serious games increase engagement and persistence.
+Higher engagement → better learning.
+Hyperfocus/flow are deeper forms of engagement.
+If serious-game elements can support these deeper states, students may stay focused longer and learn more effectively.
+
+
+
+Data we want to capture (Experience of hyperfocus / flow):
+	•	Normal programming focus (baseline)
+	•	Focus/absorption when using the app
+	•	Flow/hyperfocus indicators (time loss, deep concentration, awareness drop, motivation)
+	•	Which serious-game design elements helped or broke focus
+	•	What features could support deeper focus
+
+
+Interview questions: 
+
+1. How would you describe your usual focus and experience when working on programming tasks before using the app?
+
+
+2. How did you experience working with the app, and what parts of its design helped or hindered your ability to stay focused?
+
+
+3. Were there any moments while using the app where you felt highly absorbed and focused? If yes, can you describe that moment? And do you know how long would you say this focused state last?
+
+
+4. How did your sense of time feel while using the app — faster, slower, or normal?
+
+
+5. If you could add or change one feature to help you stay in deep focus while programming, what would it be?
+
+
+
+
+Flow: 
+Challenge-Skill Balance: “I feel I am competent enough to meet the high demands of the situation”; 
+Action-Awareness Merging: “I do things spontaneously and automatically without having to think”; 
+Clear Goals: “I have a strong sense of what I want to do”; 
+Unambiguous Feedback: “I have a good idea while I am performing about how well I am doing”; 
+Concentration on Task at Hand: “I am completely focused on the task at hand”; 
+Sense of Control: “I have a feeling of total control over what I am doing”; 
+Transformation of Time: “The way time passes seems to be different from normal”; 
+Autotelic Experience: “The experience is extremely rewarding.”
+
+
+
+Hyperfocus (AHQ)
+	1.	Intense, sustained attention
+	2.	Reduced awareness of surroundings
+	3.	Narrow focus on the task
+	4.	Time loss / difficulty disengaging
+	5.	Task-driven intrinsic interest

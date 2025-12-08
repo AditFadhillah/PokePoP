@@ -162,7 +162,7 @@ layer_1/tile_data = PackedInt32Array(983057, 65540, 1, 983058, 65540, 1, 983059,
 
 [node name="Player" parent="." groups=["player"] instance=ExtResource("2_ln808")]
 z_index = 2
-position = Vector2(224, 175)
+position = Vector2(688, 255)
 slide_on_ceiling = false
 max_speed = 80
 FRICTION = 0.3

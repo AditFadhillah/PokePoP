@@ -164,7 +164,7 @@ git show HEAD
 # Production branch: main (auto-deployed to gh-pages)
 
 git add .
-git commit -m "Added Volunteer button"
+git commit -m "3 new Dict tasks"
 
 # Push to origin main
 git push origin main

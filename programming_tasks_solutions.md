@@ -623,9 +623,106 @@ print(word_count)
 
 ---
 
+### 19. Dictionary Update Value
+**Description:** Write a function update_level(pokemon_dict, new_level) that updates the 'level' key in the dictionary to the new_level value. Return the updated dictionary.
+
+**Starter Code:**
+```python
+def update_level(pokemon_dict, new_level):
+    # TODO: Update the level value in the dictionary
+    ...
+    return pokemon_dict
+
+pokemon = {'name': 'Pikachu', 'type': 'Electric', 'level': 25}
+result = update_level(pokemon, 30)
+print(result)
+```
+
+**Solution:**
+```python
+def update_level(pokemon_dict, new_level):
+    pokemon_dict['level'] = new_level
+    return pokemon_dict
+
+pokemon = {'name': 'Pikachu', 'type': 'Electric', 'level': 25}
+result = update_level(pokemon, 30)
+print(result)
+```
+
+**Output:**
+```
+{'name': 'Pikachu', 'type': 'Electric', 'level': 30}
+```
+
+---
+
+### 20. Dictionary Get with Default
+**Description:** Use the .get() method to retrieve the value for key 'hp' from a pokemon dictionary. If the key doesn't exist, return the default value 100.
+
+**Starter Code:**
+```python
+pokemon = {'name': 'Pikachu', 'type': 'Electric', 'level': 25}
+# TODO: Use .get() method to retrieve 'hp' with default 100
+hp = ...
+
+print(hp)
+```
+
+**Solution:**
+```python
+pokemon = {'name': 'Pikachu', 'type': 'Electric', 'level': 25}
+hp = pokemon.get('hp', 100)
+
+print(hp)
+```
+
+**Output:**
+```
+100
+```
+
+---
+
+### 21. Dictionary Values Sum
+**Description:** Write a function sum_stats(stats_dict) that takes a dictionary of stat names and values, and returns the sum of all values using a loop.
+
+**Starter Code:**
+```python
+def sum_stats(stats_dict):
+    # TODO: Sum all values in the dictionary using a loop
+    total = 0
+    for ... in ...:
+        ...
+    return total
+
+stats = {'hp': 45, 'attack': 49, 'defense': 49, 'speed': 45}
+result = sum_stats(stats)
+print(result)
+```
+
+**Solution:**
+```python
+def sum_stats(stats_dict):
+    total = 0
+    for value in stats_dict.values():
+        total += value
+    return total
+
+stats = {'hp': 45, 'attack': 49, 'defense': 49, 'speed': 45}
+result = sum_stats(stats)
+print(result)
+```
+
+**Output:**
+```
+188
+```
+
+---
+
 ## Swamp Category (Mixed Concepts)
 
-### 19. Reverse Dictionary with For Loop ⭐
+### 22. Reverse Dictionary with For Loop ⭐
 **Description:** Write a function reverse_dict(input_dict) that swaps keys and values using a for loop. Given {'a': '1', 'b': '2'}, return {'1': 'a', '2': 'b'}. Assume both keys and values are unique.
 
 **Starter Code:**
@@ -664,7 +761,7 @@ print(result)
 
 ---
 
-### 20. Multiplication Table
+### 23. Multiplication Table
 **Description:** Write a function print_table(n) that prints a multiplication table for n using nested loops (rows 1-n, columns 1-n).
 
 **Starter Code:**
@@ -701,7 +798,7 @@ print_table(3)
 
 ---
 
-### 21. Tuple to Lowercase List ⭐
+### 24. Tuple to Lowercase List ⭐
 **Description:** Use list comprehension to convert all items in month_abbrevs tuple to lowercase. Store result in month_abbrevs_lower list. Note: Python doesn't have true tuple comprehension - using parentheses with comprehension creates a generator, so we use list comprehension.
 
 **Starter Code:**
@@ -727,7 +824,7 @@ print(month_abbrevs_lower)
 
 ---
 
-### 22. Tuple Unpacking ⭐
+### 25. Tuple Unpacking ⭐
 **Description:** Create a tuple with month abbreviations, then unpack it into three separate variables and print them separated by spaces. If you try to unpack a tuple with 4 items into 3 variables, Python raises a ValueError.
 
 **Starter Code:**
@@ -757,7 +854,7 @@ Jan Feb Mar
 
 ---
 
-### 23. Create and Access Tuple
+### 26. Create and Access Tuple
 **Description:** Create a tuple containing three Pokemon names: 'Pikachu', 'Charmander', 'Bulbasaur'. Access and print the second Pokemon (index 1).
 
 **Starter Code:**
@@ -783,7 +880,7 @@ Charmander
 
 ---
 
-### 24. Tuple Length and Index
+### 27. Tuple Length and Index
 **Description:** Given a tuple of colors, find its length and find the index of the color 'blue'. Use len() and .index() methods.
 
 **Starter Code:**
@@ -810,7 +907,7 @@ print(colors.index('blue'))
 
 ---
 
-### 25. DNA to mRNA Transcription ⭐
+### 28. DNA to mRNA Transcription ⭐
 **Description:** Define transcription(input_sequence, mapping_dict) that translates DNA to mRNA. When input_sequence contains illegal characters, print error message and return an empty string.
 
 **Starter Code:**
@@ -836,7 +933,7 @@ def transcription(input_sequence, mapping_dict):
         if c not in mapping_dict:
             print('Illegal input DNA sequence.')
             return ''
-        output_sequence = output_sequence + mapping_dict[c]
+        output_sequence = output_sequence + mapping_dict[c]x
     return output_sequence
 
 input_seq = 'TCGTTCAGT'
@@ -854,7 +951,7 @@ AGCAAGUCA
 
 ## Volcano Category (Regex-focused)
 
-### 26. Find Word with Regex
+### 29. Find Word with Regex
 **Description:** Use re.search() to check if the word 'Python' appears in a string. Return True if found, False otherwise.
 
 **Starter Code:**
@@ -889,7 +986,7 @@ True
 
 ---
 
-### 27. Replace Letter
+### 30. Replace Letter
 **Description:** Use re.sub() to replace all letter 'a' with 'o' in a string. For example, 'cat and rat' should become 'cot ond rot'.
 
 **Starter Code:**
@@ -920,7 +1017,7 @@ cot ond rot
 
 ---
 
-### 28. Find All Numbers
+### 31. Find All Numbers
 **Description:** Use re.findall() to find all single-digit numbers in the text. Return them as a list.
 
 **Starter Code:**
@@ -951,7 +1048,7 @@ print(numbers)
 
 ---
 
-### 29. Split by Comma
+### 32. Split by Comma
 **Description:** Use re.split() to split text by comma. Return a list of words.
 
 **Starter Code:**
@@ -982,7 +1079,7 @@ print(fruits)
 
 ---
 
-### 30. Find All Words
+### 33. Find All Words
 **Description:** Use re.findall() to find all words (sequences of letters) in the text. Return them as a list.
 
 **Starter Code:**
@@ -1013,7 +1110,7 @@ print(words)
 
 ---
 
-### 31. Check if Starts with Letter
+### 34. Check if Starts with Letter
 **Description:** Use re.match() to check if a string starts with a letter (uppercase or lowercase). Test with 'Hello123'.
 
 **Starter Code:**
@@ -1050,10 +1147,10 @@ True
 
 ## Summary Statistics
 
-- **Total Tasks:** 31
+- **Total Tasks:** 34
 - **Loop-focused Tasks:** 10 (Forest)
-- **Dictionary Tasks:** 8 (Beach)
-- **Mixed Concepts Tasks:** 8 (Swamp - includes tuple operations, nested loops, and dictionary with loops)
+- **Dictionary Tasks:** 11 (Beach)
+- **Mixed Concepts Tasks:** 7 (Swamp - includes tuple operations, nested loops, and dictionary with loops)
 - **Regex Tasks:** 6 (Volcano)
 
 ### Task Distribution by Category
@@ -1078,34 +1175,37 @@ True
 16. Dictionary Key Check ⭐ Professor's Task
 17. Zodiac Reverse Dictionary (Dict Comprehension) ⭐ Professor's Task
 18. Count Words in Dictionary
+19. Dictionary Update Value
+20. Dictionary Get with Default
+21. Dictionary Values Sum
 
 **Swamp (Mixed Concepts - Tuples, Nested Loops, Dictionary+Loops):**
-19. Reverse Dictionary with For Loop ⭐ Professor's Task (Alternative approach)
-20. Multiplication Table
-21. Tuple to Lowercase List ⭐ Professor's Task
-22. Tuple Unpacking ⭐ Professor's Task
-23. Create and Access Tuple
-24. Tuple Length and Index
-25. DNA to mRNA Transcription ⭐ Professor's Task
+22. Reverse Dictionary with For Loop ⭐ Professor's Task (Alternative approach)
+23. Multiplication Table
+24. Tuple to Lowercase List ⭐ Professor's Task
+25. Tuple Unpacking ⭐ Professor's Task
+26. Create and Access Tuple
+27. Tuple Length and Index
+28. DNA to mRNA Transcription ⭐ Professor's Task
 
 **Volcano (Regex-focused):**
-26. Find Word with Regex
-27. Replace Letter
-28. Find All Numbers
-29. Split by Comma
-30. Find All Words
-31. Check if Starts with Letter
+29. Find Word with Regex
+30. Replace Letter
+31. Find All Numbers
+32. Split by Comma
+33. Find All Words
+34. Check if Starts with Letter
 
 ### Professor's Tasks Integration
 All tasks from the professor's worksheet (w04_monday_worksheet_solution) are properly included:
 - **Task #15 (Beach)**: Dictionary from Two Lists using zip()
 - **Task #16 (Beach)**: Dictionary Key Check with 'in' keyword
 - **Task #17 (Beach)**: Zodiac Reverse Dictionary using dictionary comprehension
-- **Task #19 (Swamp)**: Reverse Dictionary using explicit for loop (alternative approach to show loop mechanics)
-- **Task #20 (Swamp)**: Multiplication Table with nested loops (rows 1-n, columns 1-n)
-- **Task #21-22 (Swamp)**: Tuple operations (lowercase conversion, unpacking)
-- **Task #25 (Swamp)**: DNA to mRNA transcription with error handling
+- **Task #22 (Swamp)**: Reverse Dictionary using explicit for loop (alternative approach to show loop mechanics)
+- **Task #23 (Swamp)**: Multiplication Table with nested loops (rows 1-n, columns 1-n)
+- **Task #24-25 (Swamp)**: Tuple operations (lowercase conversion, unpacking)
+- **Task #28 (Swamp)**: DNA to mRNA transcription with error handling
 
 **Note:** The Dictionary Reversal concept appears twice with different approaches:
 1. **Task #17 (Beach)** - Dictionary comprehension (concise, Pythonic)
-2. **Task #19 (Swamp)** - Explicit for loop (educational, demonstrates iteration)
+2. **Task #22 (Swamp)** - Explicit for loop (educational, demonstrates iteration)

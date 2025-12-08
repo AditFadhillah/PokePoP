@@ -1,0 +1,221 @@
+
+RQ: What design principles can be applied towards supporting hyperfocus state of neurodivergent Computer Science students when learning programming?
+
+ 
+
+\section{Theory}
+This section presents the theoretical concepts that underpin our research question on what design principles might support hyper-focus states among neurodivergent Computer Science students learning programming. 
+
+The discussion connects theories from serious games, neurodiversity, hyper-focus, and game-design patterns, by examining how these perspective might related to sustained engagement and the support of hyper-focusing learning states.  
+
+
+\subsection{Serious Games and Its Usage}
+Serious Games(SGs) are games designed for a primary purpose beyond entertainment, most commonly,they are designed for learning, training or behaviour development. SGs make use of game-based techniques such as immediate feedback, competition, goal achievement and collaboration to sustain user engagement and attention. 
+By combining interactive game environments with structured educational goals, SGs allow players to learn and practice specific skills through different scenarios that are purposely designed to support the learning process.
+This creates a hybrid experience that supports both enjoyment and skill acquisition.
+\cite{SG_rodriguez2024use}
+
+
+
+Research has repeatedly shown that Serious Games increase learner motivation, engagement and provides tailored, personalized learning experiences. \cite{SG_ADHD_ALABDULAKAREEM2020100341} SGs have also  demonstrated effectiveness in supporting cognitive development. According to research (\citet{SG_rodriguez2024use} (2004)), SG interventions have been shown to enhance executive functions including working memory, inhibitory control and cognitive flexibility for individuals with neurodiverse conditions. 
+
+These benefits are especially evident among neurodiverse populations. Serious Games interventions have been shown to enhance cognitive abilities such as attention, working memory, planning skills and emotional regulation in children with ADHD and other neurodiverse populations. Hence, there is a growing trend of use of SG as a powerful tool for educational and therapeutic applications within neurodiversity landscape. \cite{SG_rodriguez2024use,SG_ADHD_ALABDULAKAREEM2020100341}
+%ref 
+
+Because of this established connection, it is necessary to examine the neurodiversity population more closely to understand 
+their specific attentional and cognitive challenges faced by these learners. This provides the foundation for understanding why SG-informed design approaches may be particularly relevant for supporting neurodiverse learners, including those studying computer science.
+
+
+
+
+\subsection{Neurodiversity and ADHD}
+Neurodiversity or the neurodiverse condition (NC) describes the variability within the human neurolgical development.  This emphasizes that individuals differs in how they learn, think and process information. Rather than viewing these differences as deficits, the neurodiversity perspective recognizes conditions such as ADHD, autism spectrum disorder, dyslexia, and Down syndrome as distinct neurological profiles with unique strengths and challenges. Additionally, research emphasizes that even though the neurodiverse population share some common traits, their strengths, challenges and responses to interventions are highly individual, which means that they would need more tailored assistance. \cite{SG_rodriguez2024use} 
+
+This framework is particularly relevant for understanding how learners experience cognitively demanding domains such as computer science and programming.
+
+
+Neurodiversed individuals often exhibits the weaknesses in various executive functions. Executive functions describe the cognitive processes that are used for regulating and controlling adaptive and goal-directed behavior, this including, working memory, ability to inhibit behaviors, task switching, planning, emotional regulation, impulse control and motivation. Executive functions play a crucial part in individuals daily functioning, social interaction and academic success. Hence, the neurodiverse individuals often show weakness in organization, monitoring progress and work quality. \cite{SG_rodriguez2024use} 
+
+Consider Attention-Deficit/Hyperactivity Disorder (ADHD), one of the most widely studidied neurodiversed conditions. ADHD is a neurodevelopmental condition characterized by inattentiveness, hyperactivity and impulsiveness. It has been observed that children with ADHD have a shorten span of working memory which is the ability to store, process it and generate response towards the information.  They are more likely to struggle to finish activities as they get bored quickly. Hence, it is common for students with  ADHD to underperform in academia and experience other educational problems. As one of the consequences, students with ADHD often require cognitive behavior therapies to assist them in better performance.
+\cite{SG_ADHD_ALABDULAKAREEM2020100341,ADHD_Strength_maw2024cognitive} 
+
+% current uniformed learning 
+
+Research across STEM further illustrates that neurodivergent learners are not a single profile, yet patterns do emerge. Autistic students are overrepresented in STEM fields while enrolling in college at lower rates overall, especially within the CS fields.  \cite{WeiEtAl2013,Mettenbrink2024}.
+CS students often struggle not because of a lack of ability, because their cognitive profiles misaligned with how standardized CS courses are structured. Course staff are frequently unable or insufficiently supported to address these needs, resulting in environments that do not anticipate differences in executive functioning, attention, or energy levels. The rigid pacing, heavy workloads, and lack of multimodal materials create unnecessary cognitive overload, making it harder for neurodivergent learners to sustain focus and making them more vulnerable to cognitive fatigue \cite{BorsottiBegelBjoern2024}.
+
+These findings suggest strong interest and aptitude to explore different learning design approaches to coexist  with barriers that the  neurodivergent learners  might face to minimize the friction and create better learning. 
+
+% Connect neurodivergent with hyperfocus on the next subsection
+
+These structural and situational barriers also shape how attention fluctuates during study. In particular, they may explain when and how hyper-focus arises, which can enable deep, productive engagement, and at other times making it harder to initiate or switch tasks. This dynamic will be further explored in the next subsection.
+
+\subsection{Hyper-focus}
+Hyper-focus is a state of very strong, narrow attention with loss of time and reduced awareness of the surroundings. People report difficulty stopping or switching tasks and sometimes neglect basic needs. Their task performance increases during the hyper-focus state. This pattern is common during activities that feel rewarding, such as hobbies, screen use, or specific school tasks \cite{HupfeldEtAl2019,hyperfocus_sklar2013hyperfocus}. 
+
+Although hyper-focus is increasingly recognized as an attentional pattern within ADHD \cite{hyperfocus_sedgwick2019positive,hyperfocus_maw2024cognitive}. Large samples also show that hyper-focus is not specific to ADHD. It also appears across the general population. For adults with ADHD, hyper-focus is less likely to happen in educational and social situations \cite{GroenEtAl2020}. Other research shows qualitative evidence about conditions, particularly task engagement. This means that the tasks must be interesting or particularly fun to trigger the individual to enter the hyper-focus zone. 
+
+Base on these insights about hyper-focus, we would explore which existing game design pattern have been applied to create fun, challenging and attractive games. 
+
+\subsection{Game-Design Patterns}
+In order to design for hyper-focus, we take a look of what kinds of design pattern have been used in current practices to change players' behavior both in games and digital products. 
+
+Different design strategies can be used in games and digital products to influence user behavior or even manipulate users. These strategies include \textbf{dark patterns, addictive patterns} and \textbf{positive behavioral design patterns}. 
+
+
+Dark design can be described through four main categories of dark patterns, adapted from the dark-pattern literature in games \cite{ZagalEtAl2013}. 
+
+\textbf{Temporal dark patterns.}
+These steer how much time users spend. Examples include playing by appointment, daily rewards, grinding, and attention-capturing ad breaks \cite{ZagalEtAl2013}. In an educational setting, timer, soft streaks, and productive feedback loops can help achieve focus. \cite{KoivistoHamari2019}.
+
+\textbf{Monetary dark patterns.}
+These push extra spending, such as pay-to-skip, premium currencies, pay-to-win, or artificial scarcity \cite{ZagalEtAl2013}. 
+% For learning tools, such mechanics are excluded. If rewards exist, they remain cosmetic, and cost-free.
+
+\textbf{Social dark patterns.}
+These leverage social capital. Typical cases are social obligation or guild pressure, pyramid-style recruitment, friend spam, and enforced reciprocity \cite{ZagalEtAl2013}. To encourage sense of competitiveness leaderboard system can be used in the achieving focus in learning programming. 
+
+\textbf{Psychological dark patterns.}
+These use cognitive biases, for example rewarded progress and badges, collection drives, illusion of control, and near-miss effects \cite{ZagalEtAl2013}. In education, progress bars and mastery badges can support motivation \cite{KoivistoHamari2019}. Near-miss or gambling-like randomness is the main part interest of this category due to their reward-circuit effects on the users \cite{ClarkEtAl2009}.
+
+
+Addictive patterns are considered as a subset of dark patterns, with the same purpose of maximizing user engagement but more oriented toward making users spend more time using the product or have a greater degree of commitment that what is expected, convenient or health for them. \cite{addicivedesign_beltran2025defining}
+
+It is important to draw a line between dark patterns and addictive patterns is the decision autonomy. Dark patterns distort user decisions by cognitive biases. In contrast to addictive patterns are specially aimed at producing compulsive engagement and user dependence. \cite{addicivedesign_beltran2025defining}
+
+According to the paper \cite{addicivedesign_beltran2025defining}, organized the addictive patterns into a three-level taxonomy spanning \textbf{Forced Action, Social Engineering, Interface Interference, and Persistence}, each containing concrete low-level design implementations. These low level design patter  is listed in Table \ref{table: Addictive Patterns}: 
+
+
+
+
+\begin{table*}[h!]
+\centering
+\caption{Three-Level Taxonomy of Addictive Pattern.(adapted from Beltrán, 2025, p. 317).}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{High-level pattern} & \textbf{Meso-level pattern} & \textbf{Low-level pattern} \\
+\hline
+
+\multirow{3}{*}{FORCED ACTION} 
+& Forced continuity 
+& Pull to refresh \\
+& & Endless scrolling, infinite scrolling \\
+& & Endless streaming \\
+& & Timers \\
+& & Playing by appointment, socially driven game \\
+\cline{2-3}
+
+& Gamification 
+& Grinding and mere-exposure \\
+& & Periodic rewards (intermediate currency, loot boxes, free gifts, point programmes) \\
+& & Complete the collection (achievements and badges) \\
+\cline{2-3}
+
+& Attention capture 
+& Autoplay \\
+\hline
+
+\multirow{6}{*}{SOCIAL ENGINEERING}
+& Scarcity
+& High demand, scarcity and popularity claims \\
+\cline{2-3}
+
+& Social proof
+& Social support, feedback and reward (likes, reposts, forwarding) \\
+& & Social pressure or comparison \\
+& & Activity notifications \\
+\cline{2-3}
+
+& Urgency
+& Alert messages and push notifications \\
+& & Countdown timers \\
+\cline{2-3}
+
+& Shaming
+& Limited time messages (temporarily available information) \\
+& & Regression to the mean \\
+\cline{2-3}
+
+& Fear of missing out
+& Information renewability (unpredictability, interactive hooks) \\
+\cline{2-3}
+
+& Personalization
+& Confirm shaming \\
+& & Social connectors (address book leeching, friend spam, social pyramid) \\
+& & Algorithmic recommendations (personalized suggestions, AI-based recommendations) \\
+\hline
+
+\multirow{3}{*}{INTERFACE INTERFERENCE}
+& Aesthetic manipulation
+& Misdirection (visual prominence, hidden information, false hierarchy, visual interference) \\
+\cline{2-3}
+
+& Toying with emotion
+& Persuasive language (motivational or emotionally steering language) \\
+& & Cognitive overload (overloading, excessive information) \\
+& & Reduced friction and persistence (deceptive snugness) \\
+\hline
+
+\multirow{2}{*}{PERSISTENCE}
+& Zeigarnik / Ovsiankina effect
+& Progress bars \\
+\cline{2-3}
+
+& Microinterruptions
+& Persistent prompts or nagging, unwanted solicitations, continuous prompting \\
+\hline
+\end{tabularx}
+\label{table: Addictive Patterns}
+\end{table*}
+
+
+Viewed this way, addictive patterns can be repurposed for positive outcomes and contribute to the player such as supporting focus and persistence for learning. By using the behavioral change techniques. These basic change methods are listed in Table \ref{table: Behavior Change technique}. \cite{behaviordesign_van2021behavioral} 
+
+\begin{table*}[h!]
+\centering
+\begin{tabular}{|l|}
+\hline
+Basic behavioral change methods\\
+\hline
+Reinforcement and punishment\\
+Nudging and facilitating\\
+Social techniques \& modeling\\
+Complex feedback systems\\
+Guided practice\\
+Early/public commitment \& goals\\
+Tailoring and individualization\\
+Forced ‘snap’ decisions\\
+Using imagery to relay value\\
+Anticipated regret\\
+Conditioning and cue altering\\
+ \hline
+\end{tabular}
+\caption{Basic behavioral change methods. (adapted from  }
+\label{table: Behavior Change technique}
+\end{table*}
+
+\textbf{Reinforcement and punishment} includes the process of strengthening or weakning behaviors through rewards and feedback. \\
+
+\textbf{Nudging and facilitating}, make desirable actions easier or more likely to occur.\\
+
+\textbf{Social techniques \& modeling}, where the player's action can be influenced by observing others' action or social norms.\\
+
+\textbf{Complex feedback systems}, the system should provide continuous feedback about progress and performance, such as graded task, adjust the level's difficulty, and contingent rewards.\\
+
+\textbf{Guided practice}, makes it available for user to repeat the behaviors in various times and provide them with feedback.\\
+
+\textbf{Early / public commitment \& goals},letting players choose delayed rewards in advance. Let people make commitment to certain behavior in front of others for more binding. Prompting planning.\\
+
+\textbf{Tailoring and individualization},  adapt and customize the experience to the individual user's ability, preference and progress. \\
+
+\textbf{Forced ‘snap’ decisions}, the opposite of  active learning which relies on deep elaboration and evaluation. It entails quick, automatic response driven by existing knowledge\\
+
+\textbf{Using imagery to relay value}, using artifact or concept that are familiar to the new subject either visual or verbal. \\
+\textbf{Anticipated regret}, stimulating the regret felling before any losses actually existed.\\
+
+
+\textbf{Conditioning and cue altering}, using specific triggers for stimuli to shape the desired habit by associating them.\cite{behaviordesign_van2021behavioral}  \\
+
+Viewed as a whole, these contrasting pattern families illustrate that the same behavioral mechanisms used to manipulate attention or induce compulsive engagement can also be adapted to promote constructive and intentional learning outcomes. With this in mind, these techniques serve as the conceptual foundation for identifying which design elements may help neurodivergent learners—particularly those with ADHD—enter and sustain productive hyper-focused learning states. 

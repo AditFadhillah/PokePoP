@@ -1,0 +1,110 @@
+\section{Prototype}
+This section presents the web-based serious game prototype and explains the design rationale through the lens of hyper-focus support and game design patterns that promote sustained, deep engagement.
+
+
+\subsection{Prototype Overview}
+The prototype, PyMon, is a web-based serious game that integrates Python programming education with Pokemon-inspired gameplay mechanics. The application features a dual-panel interface where gameplay and code development occur simultaneously, creating an integrated learning environment designed to support hyper-focus states during programming practice.
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.95\linewidth]{Illustrations/WebAppScreenshot.png}
+    \caption{Snapshot of an encounter on the web app, the editor contains tasks that the user have to solve to capture the creature.}
+    \label{fig:Snapshot1}
+\end{figure}
+
+As shown in Figure \ref{fig:Snapshot1}, the interface is divided into two main sections: the game world (left panel) and the Python code editor with syntax highlighting (right panel). Students explore a 2D overworld map using keyboard controls (ARROW KEYS or WASD), encountering wild Pokemon in four distinct regions: Forest, Beach, Volcano, and Swamp. Each region contains unique Pokemon species and presents programming challenges aligned with specific Python concepts.
+
+
+\subsection{Core Gameplay Loop and Learning Mechanics}
+
+The prototype implements a structured gameplay loop designed to maintain continuous engagement:
+
+\textbf{Exploration Phase:} Students navigate the overworld map, discovering Pokemon through environmental interactions (tall grass, crystal boulders, beached kelp). This exploration provides mental breaks between coding challenges while maintaining the game narrative.
+
+\textbf{Battle Phase:} When a Pokemon encounter occurs, the interface transitions to battle mode. Instead of traditional turn-based combat, students receive a region-specific programming task displayed in the code editor with:
+\begin{itemize}
+    \item Clear task description and requirements
+    \item Starter code template to reduce cognitive load
+    \item Expected output for self-assessment
+    \item Live syntax highlighting for immediate visual feedback
+\end{itemize}
+
+\textbf{Task Categories by Region:}
+\begin{itemize}
+    \item \textbf{Forest Region:} Loop constructs and iterations (for loops, nested loops)
+    \item \textbf{Beach Region:} Dictionary operations (key-value pairs, merging, lookups)
+    \item \textbf{Volcano Region:} Regular expressions (pattern matching, validation)
+    \item \textbf{Swamp Region:} Advanced data structures (tuples, comprehensions)
+\end{itemize}
+
+Students write Python code to solve the challenge, then click "Evaluate Code" to execute their solution. Upon successful validation (output matching expected result), the Pokemon is captured and added to their persistent inventory with calculated point rewards.
+
+
+\subsection{Design Principles Supporting Hyper-Focus States}
+
+The prototype incorporates specific design elements informed by game design patterns and behavioral change techniques to facilitate hyper-focus and sustained engagement. Research indicates that hyper-focus requires tasks that feel rewarding, interesting, and engaging \cite{HupfeldEtAl2019,hyperfocus_sklar2013hyperfocus}, and is characterized by intense, narrow attention with increased task performance. The following design principles aim to create conditions conducive to this state:
+
+\textbf{1. Reinforcement Systems (Complex Feedback and Rewards)}
+\begin{itemize}
+    \item \textbf{Immediate feedback:} Code execution provides instant validation with clear success/failure indicators
+    \item \textbf{Periodic rewards:} Pokemon captured upon task completion, creating concrete reinforcement
+    \item \textbf{Point system:} Base points (level × 100) plus time bonus for faster solutions, rewarding both completion and efficiency
+    \item \textbf{Achievement system:} 18 unlockable milestones across five categories (First Steps, Dedication, Collection, Mastery, Commitment)
+    \item \textbf{Visual feedback:} Real-time syntax highlighting during code writing, capture animations, and progress indicators
+\end{itemize}
+
+\textbf{2. Gamification Patterns (Complete the Collection)}
+\begin{itemize}
+    \item \textbf{Collection mechanics:} Building a Pokemon inventory creates tangible, visible progress
+    \item \textbf{Regional mastery:} Completing all unique Pokemon (6 per region) in Forest, Beach, Volcano, or Swamp unlocks special achievements
+    \item \textbf{Badges and achievements:} Milestone tracking for captures (5, 10, 15, 20), login streaks (1-5 days), and playtime (60, 90, 120 minutes)
+    \item \textbf{Progress bars:} Visual representation of collection completion and achievement progress
+\end{itemize}
+
+\textbf{3. Social Techniques and Modeling (Social Proof and Competition)}
+\begin{itemize}
+    \item \textbf{Individual leaderboard:} Trainer rankings based on total points, providing social comparison
+    \item \textbf{Team-based competition:} Students join teams (Red, Blue, Yellow) with aggregate team scores visible
+    \item \textbf{Social pressure:} Visible rankings may motivate continued engagement and task completion
+    \item \textbf{Performance visibility:} Capture times and achievement counts create benchmarks for comparison
+\end{itemize}
+
+\textbf{4. Temporal Patterns (Playing by Appointment, Timers)}
+\begin{itemize}
+    \item \textbf{Login streaks:} Daily login tracking rewards consistent engagement (1-5 day achievements)
+    \item \textbf{Hidden countdown timer:} 15-minute battle limit creates urgency without visible pressure, encouraging focused problem-solving
+    \item \textbf{Time bonus mechanics:} Faster solutions yield higher rewards, incentivizing sustained attention
+    \item \textbf{Session duration tracking:} Total playtime monitoring with commitment-based achievements
+\end{itemize}
+
+\textbf{5. Tailoring and Guided Practice}
+\begin{itemize}
+    \item \textbf{Progressive difficulty:} Pokemon levels (1-5) scale task complexity gradually
+    \item \textbf{Region-based categorization:} Four distinct regions (Forest, Beach, Volcano, Swamp) focus on specific Python concepts
+    \item \textbf{Starter code scaffolding:} Pre-populated templates reduce initial cognitive load
+    \item \textbf{Anti-repetition system:} Database-level filtering prevents consecutive identical tasks
+    \item \textbf{Contextual hints:} Dynamic 10-second hint rotation provides guidance without interrupting workflow
+\end{itemize}
+
+\textbf{6. Interface Design for Reduced Cognitive Load}
+\begin{itemize}
+    \item \textbf{Single-screen integration:} Game and code editor side-by-side eliminates context switching
+    \item \textbf{Accessible references:} Python syntax help and code examples available via modal without navigation
+    \item \textbf{Clear task structure:} Each challenge includes description, starter code, and expected output
+    \item \textbf{Student autonomy:} Freedom to explore regions, flee difficult battles, and self-pace progression
+\end{itemize}
+
+\textbf{7. Performance Analytics and Conditioning}
+\begin{itemize}
+    \item \textbf{Capture time measurement:} Millisecond-precision tracking of task solve duration
+    \item \textbf{Session analytics:} Total playtime, longest sessions, and engagement patterns
+    \item \textbf{Streak monitoring:} Login consistency tracking to build habitual engagement
+    \item \textbf{Regional statistics:} Per-region capture counts for targeted skill development awareness
+\end{itemize}
+
+
+\subsection{Technical Implementation}
+
+The prototype utilizes a React + TypeScript frontend with Pyodide for in-browser Python execution, connected to a Godot-based game engine for the 2D gameplay. User data, task history, and achievements are persisted in a Supabase PostgreSQL database with real-time synchronization. This architecture enables immediate code execution feedback without server round-trips, supporting the uninterrupted attention characteristic of hyper-focus states.
+
+The system implements 31 unique programming tasks distributed across the four regions: 10 tasks in Forest (loops and nested loops), 8 tasks in Beach (dictionary operations), 6 tasks in Volcano (regular expressions), and 7 tasks in Swamp (tuples and advanced data structures). Each task is designed for beginner-level difficulty with estimated 2-5 minute solve times. Task selection uses database-level randomization with exclusion of recently completed tasks to maintain variety and prevent monotony, supporting the need for tasks to remain interesting and engaging—conditions identified as critical for triggering hyper-focus \cite{GroenEtAl2020}. 
