@@ -164,7 +164,7 @@ git show HEAD
 # Production branch: main (auto-deployed to gh-pages)
 
 git add .
-git commit -m "3 new Dict tasks"
+git commit -m "Show all players in leaderboard"
 
 # Push to origin main
 git push origin main

@@ -29,12 +29,11 @@ export default function IndividualLeaderboardModal({ show, onClose, currentUserI
     try {
       setLoading(true)
       
-      // Get top 10 trainers
+      // Get all trainers
       const { data, error } = await supabase
         .from('trainer_leaderboard')
         .select('*')
         .order('total_points', { ascending: false })
-        .limit(10)
       
       if (error) {
         console.error('Error loading leaderboard:', error)
