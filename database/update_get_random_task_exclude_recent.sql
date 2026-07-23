@@ -3,6 +3,7 @@
 -- Run this in your Supabase SQL Editor
 
 -- Drop old function versions
+DROP FUNCTION IF EXISTS get_random_task();
 DROP FUNCTION IF EXISTS get_random_task(TEXT);
 DROP FUNCTION IF EXISTS get_random_task(TEXT, UUID[]);
 
@@ -43,10 +44,10 @@ GRANT EXECUTE ON FUNCTION get_random_task(TEXT, UUID[]) TO anon;
 
 -- Test the function
 -- Get random task from any category
-SELECT * FROM get_random_task();
+SELECT * FROM get_random_task(NULL::TEXT, ARRAY[]::UUID[]);
 
 -- Get random task from Forest region (no exclusions)
-SELECT * FROM get_random_task('Forest', ARRAY[]::UUID[]);
+SELECT * FROM get_random_task('Forest'::TEXT, ARRAY[]::UUID[]);
 
 -- Example: Get random task, excluding specific UUIDs
 -- Replace with actual task IDs from your programming_tasks table
