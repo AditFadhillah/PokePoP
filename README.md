@@ -1,183 +1,65 @@
-# React + TypeScript + Vite
+# PyMon
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based serious game for learning Python through Pokemon-inspired gameplay.
 
-Currently, two official plugins are available:
+Live demo: https://aditfadhillah.github.io/PyMon/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Repository: https://github.com/AditFadhillah/PyMon/
 
-## Expanding the ESLint configuration
+## What it does
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Lets players explore a game world and encounter Pokemon.
+- Launches Python programming challenges during encounters.
+- Validates solutions in-browser and rewards successful captures.
+- Tracks trainer progress, leaderboards, achievements, and sessions.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+- React + TypeScript + Vite
+- Godot (game layer)
+- Supabase + PostgreSQL (auth and data)
+- Pyodide (Python execution in browser)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Local development
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-------------------------------------------------------------
-
-# Install dependencies (first time or after updating package.json)
+```bash
 npm install
-
-# Start development server with hot reload
 npm run dev
+```
 
-# Build production-ready files (output in dist/)
+Other scripts:
+
+```bash
 npm run build
-
-# Preview the production build locally
 npm run preview
+```
 
-# GITHUB
-# Initialize repo (first time)
-git init
+## Database setup (fresh project)
 
-# Add all changes
-git add .
+Run these SQL files in Supabase SQL Editor in this order:
 
-# Or add specific file
-git add src/ui/App.tsx
+1. database/database_schema.sql
+2. database/cleanup_duplicate_tasks.sql
+3. database/add_category_to_tasks.sql
+4. database/update_get_random_task_exclude_recent.sql
+5. database/create_achievements_table.sql
+6. database/usage_sessions_migration.sql
+7. database/add_capture_time_column.sql
 
-# Commit with message
-git commit -m "message"
+If signup fails with RLS errors, also run:
 
-# Push to remote (after git remote add origin …)
-git push origin main
+8. database/FIX_NEW_USER_SIGNUP_ERRORS.sql
 
-# Pull latest changes
-git pull origin main
+## Environment
 
-# Check remote URL
-git remote -v
+Set Supabase values in .env:
 
-# Check repo status (changed files, branch)
-git status
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
 
-# See changes in detail
-git diff
+## Notes
 
-# Create new branch
-git checkout -b feature-battle-system
-
-# Switch to another branch
-git checkout main
-
-# List all branches
-git branch
-
-# Push new branch to GitHub
-git push -u origin feature-battle-system
-
-# Merge feature branch into main
-git checkout main
-git pull origin main
-git merge feature-battle-system
-
-# Delete branch locally
-git branch -d feature-battle-system
-
-# Delete branch on GitHub
-git push origin --delete feature-battle-system
-
-# Unstage a file (remove from git add)
-git reset HEAD <file>
-
-# Discard changes in a file (CAREFUL: irreversible)
-git checkout -- <file>
-
-# Amend the last commit (e.g., fix commit message)
-git commit --amend
-
-# Revert a commit by creating a new "undo" commit
-git revert <commit-hash>
-
-# Reset to a previous commit (dangerous: rewrites history)
-git reset --hard <commit-hash>
-
-# View commit history (short)
-git log --oneline
-
-# View commit history with branches
-git log --graph --oneline --all
-
-# Show last commit details
-git show HEAD
-
-
-# ''''''''''''''''''''''''''''''''''''''''
-# New Repository: https://github.com/AditFadhillah/PyMon
-# Main development branch: ready
-# Production branch: main (auto-deployed to gh-pages)
-
-git add .
-git commit -m "Show all players in leaderboard"
-
-# Push to origin main
-git push origin main
-
-# Push to neurogen backup
-git push neurogen ready
-
-# Push ready branch to main branch on PyMon repo
-git push origin ready:main --force
-
-# Or push to ready branch directly
-git push origin ready
-
-# Build and deploy to GitHub Pages
-npm run build
-npm run deploy
+- Current gameplay writes captured Pokemon to public.pokemon_inventory.
+- Legacy tables from older backups (for example players or pokemon_stats) are not required for current gameplay flow.
